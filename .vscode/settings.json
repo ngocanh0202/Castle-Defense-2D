@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Battle-Guard-Survival.sln"
+    "dotnet.defaultSolution": "Castle-Defense-2D.sln"
 }
