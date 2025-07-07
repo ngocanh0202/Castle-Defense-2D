@@ -1,0 +1,4 @@
+﻿itemID,itemName,description,icon,isStackable,maxStackSize,itemType
+1,Sword,Sword,Images/Template Inventory/Sword,FALSE,,Weapon
+2,Bow,Bow,Images/Template Inventory/Bow,FALSE,,Weapon
+3,Arrow,Arrow,Images/Template Inventory/Arrow,TRUE,5,Weapon
