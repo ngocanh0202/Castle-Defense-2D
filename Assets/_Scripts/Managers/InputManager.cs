@@ -18,7 +18,7 @@ public enum InputType
 public class InputManager : Singleton<InputManager>
 {
     [SerializeField] private bool canInput;
-    public event Action<float, float> OnMove;
+    public event Action<Vector2> OnMove;
     public event Action<bool> OnStop;
     public event Action OnAttack;
     public event Action<KeyOfObjPooler> OnSetBulletStrategy;
@@ -47,7 +47,8 @@ public class InputManager : Singleton<InputManager>
         if ((moveX != 0 || moveY != 0) && IsInputTypeCanBeUsed(InputType.Move))
         {
             OnStop?.Invoke(false);
-            OnMove?.Invoke(moveX, moveY);
+            Vector2 moveDirection = new Vector2(moveX, moveY).normalized;
+            OnMove?.Invoke(moveDirection);
         }
         else
         {

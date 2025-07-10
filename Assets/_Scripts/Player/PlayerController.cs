@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    void OnMove(float x, float y)
+    void OnMove(Vector2 moveDirection)
     {
         if (IsStop)
         {
@@ -36,8 +36,7 @@ public class PlayerController : MonoBehaviour
             rb.velocity = Vector2.zero;
             return;
         }
-        Vector2 moveDirection = new Vector2(x, y);
-        rb.velocity = moveDirection.normalized * moveSpeed;
+        rb.velocity = moveDirection * moveSpeed;
     }
 
     void OnAttack()
