@@ -18,5 +18,5 @@ MonoBehaviour:
   speedReloadAmmo: 0.1
   bulletState:
     speed: 15
-    damage: 3
+    damage: 5
     lifeTime: 0.75

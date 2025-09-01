@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Common2D.Inventory;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -11,13 +13,18 @@ public class PlayerController : MonoBehaviour
     [Header("Player Status")]
     [SerializeField] bool IsStop = true;
     [Header("Components")]
-    Rigidbody2D rb;
-    Gun gun;
+    [SerializeField] Rigidbody2D rb;
+    [SerializeField] Gun gun;
+    [SerializeField] Transform gunTransform;
+    [SerializeField] Camera mainCamera;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.freezeRotation = true;
         gun = GetComponentInChildren<Gun>();
+        gunTransform = gun.transform;
+
+        mainCamera = Camera.main;
 
         InputManager.Instance.OnMove += OnMove;
         InputManager.Instance.OnAttack += OnAttack;
@@ -25,14 +32,28 @@ public class PlayerController : MonoBehaviour
         InputManager.Instance.OnStop += OnStop;
         InputManager.Instance.OnSetBulletStrategy += OnSetBulletStrategy;
         InputManager.Instance.OnReloadAmmo += OnReloadAmmo;
+        InputManager.Instance.OnSetWeaponRotation += OnSetWeaponRotation;
 
+        gun.SetStrategy(KeyGuns.BaseBullet);
+    }
+
+    void Update()
+    {
+        if (mainCamera != null)
+        {
+            mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y, mainCamera.transform.position.z);
+        }
+    }
+
+    void OnSetWeaponRotation(Action<Transform> func)
+    {
+        func?.Invoke(gunTransform);
     }
 
     void OnMove(Vector2 moveDirection)
     {
         if (IsStop)
         {
-            Debug.Log("Player is stopped, not moving.");
             rb.velocity = Vector2.zero;
             return;
         }
@@ -41,10 +62,11 @@ public class PlayerController : MonoBehaviour
 
     void OnAttack()
     {
+        if(gun.isAttacking) return;
         gun.Attack();
     }
 
-    void OnSetBulletStrategy(KeyOfObjPooler strategyType)
+    void OnSetBulletStrategy(KeyGuns strategyType)
     {
         gun.SetStrategy(strategyType);
     }
@@ -57,7 +79,7 @@ public class PlayerController : MonoBehaviour
     }
     void OnOpenInventory()
     {
-        
+        InventoryUI.Instance.ToggleInventory();
     }
 
     void OnStop(bool isStop)

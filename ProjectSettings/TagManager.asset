@@ -6,13 +6,12 @@ TagManager:
   tags:
   - BaseBullet
   - Boom
-  - RatlingGunBullet
-  - Undefined
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
   - 

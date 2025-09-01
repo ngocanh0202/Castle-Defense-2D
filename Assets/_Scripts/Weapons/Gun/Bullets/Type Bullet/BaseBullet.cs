@@ -5,7 +5,7 @@ public class BaseBullet : Bullet
 {
     protected override void SetInitPooler()
     {
-        poolName = KeyOfObjPooler.BaseBullet.ToString();
+        poolName = KeyGuns.BaseBullet.ToString();
     }
 
     override protected void Start()

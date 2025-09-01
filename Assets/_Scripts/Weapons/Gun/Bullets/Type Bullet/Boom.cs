@@ -11,9 +11,16 @@ public class Boom : Bullet
     public BoomBaseState currentState;
     public BoomExplosionState explosionState;
     public BoomShootState shootState;
+    [Header("Boom States")]
+    public float timeToExplode = 1.5f;
+    public float explosionRange = 2f;
+
     protected override void SetInitPooler()
     {
-        poolName = KeyOfObjPooler.Boom.ToString();
+        // todo: remove line 19 and 20 and 21
+        timeToExplode = 0.75f;
+        explosionRange = 4f;
+        poolName = KeyGuns.Boom.ToString();
     }
 
     override protected void Start()
@@ -44,7 +51,7 @@ public class Boom : Bullet
     void InitializeState()
     {
         if (explosionState == null)
-            explosionState = new BoomExplosionState(explosion, animator, transform , this);
+            explosionState = new BoomExplosionState(explosion, animator, transform , this, explosionRange);
         if (shootState == null)
             shootState = new BoomShootState(explosion, animator, transform , this, speed);
 
@@ -70,13 +77,33 @@ public class Boom : Bullet
         currentState.EnterState();
     }
 
-    void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.CompareTag("BaseBullet"))
+        IReceiveDamage receiveDamage = collision.GetComponent<IReceiveDamage>();
+        if (currentState == explosionState && receiveDamage != null)
         {
-            isBulletTime = false;
-            collision.gameObject.SetActive(false);
-            SetBoomState(explosionState);
+            SendDamage(damage, receiveDamage);
+        }
+    }
+
+    protected override void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.gameObject == shooterTransform?.gameObject)
+            return;
+        if (currentState == shootState)
+        {
+            IReceiveDamage receiveDamage = collider.GetComponent<IReceiveDamage>();
+            if (collider.CompareTag("BaseBullet"))
+            {
+                isBulletTime = false;
+                collider.gameObject.SetActive(false);
+                SetBoomState(explosionState);
+            }
+            else if (receiveDamage != null && !shooterTransform.CompareTag(collider.tag))
+            {
+                isBulletTime = false;
+                SetBoomState(explosionState);
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ public class RatlingGun : Bullet
 {
     protected override void SetInitPooler()
     {
-        poolName = KeyOfObjPooler.RatlingGunBullet.ToString();
+        poolName = KeyGuns.RatlingGunBullet.ToString();
     }
     override protected void Start()
     {
@@ -14,7 +14,7 @@ public class RatlingGun : Bullet
     }
     override protected void Update()
     {
-          transform.Translate(Vector3.right * speed * Time.deltaTime);
+        transform.Translate(Vector3.right * speed * Time.deltaTime);
         base.Update();
     }
 }

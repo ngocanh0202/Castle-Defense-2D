@@ -33,4 +33,6 @@ public abstract class BoomBaseState : IBoomState, IState
     abstract public void FixUpdateState();
     abstract public void OnCollision2D(Collision2D collision);
     abstract public void UpdateState();
+
+    abstract public void OnTriggerEnter2D(Collider2D collision);
 }

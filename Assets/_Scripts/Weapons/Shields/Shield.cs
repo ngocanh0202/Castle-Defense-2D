@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Shield : Weapon
 {
-    public override void Attack()
+    public override void Attack(bool isPlayer = false)
     {
         throw new System.NotImplementedException();
     }

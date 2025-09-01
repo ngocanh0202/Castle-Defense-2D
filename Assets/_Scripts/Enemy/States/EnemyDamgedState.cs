@@ -23,6 +23,11 @@ public class EnemyDamgedState : EnemyBaseState
         
     }
 
+    public override void OnTriggerEnter2D(Collider2D collision)
+    {
+        
+    }
+
     public override void UpdateState()
     {
         

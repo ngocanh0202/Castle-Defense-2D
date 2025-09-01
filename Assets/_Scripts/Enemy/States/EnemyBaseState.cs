@@ -6,7 +6,7 @@ public interface IEnemyState
     Animator Animator { get; set; }
 }
 
-public abstract class EnemyBaseState : IEnemyState, IState
+public abstract class EnemyBaseState : IEnemyState, IState, IDrawGizmos
 {
     public EnemyStateMachine StateMachine { get; set ;}
     public Animator Animator { get; set ;}
@@ -16,11 +16,15 @@ public abstract class EnemyBaseState : IEnemyState, IState
         this.Animator = animator;
     }
 
-    public abstract void EnterState();
+    public virtual void EnterState() {}
 
-    public abstract void FixUpdateState();
+    public virtual void FixUpdateState() {}
 
-    public abstract void OnCollision2D(Collision2D collision);
+    public virtual void OnCollision2D(Collision2D collision) {}
 
-    public abstract void UpdateState();
+    public virtual void UpdateState() {}
+
+    public virtual void OnTriggerEnter2D(Collider2D collision) {}
+
+    public virtual void OnDrawGizmos() {}
 }

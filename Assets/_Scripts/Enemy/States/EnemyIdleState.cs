@@ -4,89 +4,217 @@ using UnityEngine;
 
 public class EnemyIdleState : EnemyBaseState
 {
-    private SpriteRenderer spriteRenderer;
+    private Transform transform;
     private Vector3 originalPosition;
     private Vector3 targetPosition;
     private float moveRange;
-    public EnemyIdleState(EnemyStateMachine stateMachine, Animator animator) : base(stateMachine, animator)
+    private float idleSpeed;
+    private float rangeToChase = 5f;
+    
+    private float stateCheckDelay = 0.2f; 
+    private float lastStateCheckTime;
+    
+    private float chaseConfirmationTime = 0.5f; 
+    private float currentChaseTimer;
+    private bool isConfirmingChase;
+    private Collider2D potentialTarget;
+    
+    private float waitTime = 2f;
+    private float currentWaitTime;
+    private float positionThreshold = 0.1f; 
+
+    public EnemyIdleState(EnemyStateMachine stateMachine, Animator animator, float moveRange, float idleSpeed, float rangeToChase) : base(stateMachine, animator)
     {
-        spriteRenderer = stateMachine.GetComponent<SpriteRenderer>();
+        transform = stateMachine.transform;
         originalPosition = stateMachine.transform.position;
-        moveRange = 1.25f; 
+        this.moveRange = moveRange;
+        this.idleSpeed = idleSpeed;
+        this.rangeToChase = rangeToChase;
     }
 
     public override void EnterState()
     {
-
-        Debug.Log("Entering Idle State");
-        StateMachine.StartCoroutine(IdleColorChangeLoop());
-        targetPosition = originalPosition;
+        if (targetPosition == Vector3.zero || Vector3.Distance(transform.position, originalPosition) <= moveRange)
+        {
+            targetPosition = transform.position; 
+        }
+        ResetStateChecking();
+        ResetIdleMovement();
     }
 
-    public override void FixUpdateState()
+    private void ResetStateChecking()
     {
-
+        lastStateCheckTime = 0f;
+        currentChaseTimer = 0f;
+        isConfirmingChase = false;
+        potentialTarget = null;
     }
 
-    public override void OnCollision2D(Collision2D collision)
+    private void ResetIdleMovement()
     {
-
+        currentWaitTime = 0f;
     }
 
     public override void UpdateState()
     {
-        // make this enemy move randomly from original position + 5f
-        if (StateMachine.CurrentState != this)
-        {
-            return;
-        }
-        if (targetPosition != StateMachine.transform.position)
-        {
+        HandleIdleMovement();
 
+        if (Time.time - lastStateCheckTime >= stateCheckDelay)
+        {
+            CheckForChaseTargets();
+            lastStateCheckTime = Time.time;
+        }
+
+        UpdateConfirmationTimers();
+    }
+
+    private void HandleIdleMovement()
+    {
+        float distanceToTarget = Vector3.Distance(StateMachine.transform.position, targetPosition);
+
+        if (distanceToTarget > positionThreshold)
+        {
             StateMachine.transform.position = Vector2.MoveTowards(
                 StateMachine.transform.position,
                 targetPosition,
-                Time.deltaTime * 1f 
+                Time.deltaTime * idleSpeed
             );
+            currentWaitTime = 0f;
         }
         else
         {
-            Vector2 randomPosition = new Vector2(
-                originalPosition.x + Random.Range(-moveRange, moveRange),
-                originalPosition.y + Random.Range(-moveRange, moveRange)
-            );
-            targetPosition = randomPosition;
-        }
-
-    }
-
-    IEnumerator IdleColorChangeLoop()
-    {
-        while (StateMachine.CurrentState == this)
-        {
-            Color originalColor = spriteRenderer.color;
-            Color targetColor = GetRandomBlueGreenWhiteColor();
-            float duration = 1f;
-            yield return StateMachine.StartCoroutine(StateMachine.ChangeColorCoroutine(originalColor, targetColor, duration));
-            yield return new WaitForSeconds(0.25f);
+            currentWaitTime += Time.deltaTime;
+            if (currentWaitTime >= waitTime)
+            {
+                ChooseNewIdlePosition();
+                currentWaitTime = 0f;
+            }
         }
     }
 
-    Color GetRandomBlueGreenWhiteColor()
+    private void ChooseNewIdlePosition()
     {
-        int colorChoice = Random.Range(0, 3);
+        Vector2 randomOffset = Random.insideUnitCircle * moveRange;
+        Vector3 newPosition = originalPosition + new Vector3(randomOffset.x, randomOffset.y, 0f);
         
-        switch (colorChoice)
+        float minDistance = moveRange * 0.3f; 
+        while (Vector3.Distance(newPosition, StateMachine.transform.position) < minDistance)
         {
-            case 0: 
-                return new Color(0f, Random.Range(0.2f, 0.8f), Random.Range(0.7f, 1f), 1f);
-            case 1: 
-                return new Color(0f, Random.Range(0.7f, 1f), Random.Range(0.2f, 0.8f), 1f);
-            case 2:
-                float whiteIntensity = Random.Range(0.8f, 1f);
-                return new Color(whiteIntensity, whiteIntensity, whiteIntensity, 1f);
-            default:
-                return Color.white;
+            randomOffset = Random.insideUnitCircle * moveRange;
+            newPosition = originalPosition + new Vector3(randomOffset.x, randomOffset.y, 0f);
+        }
+        
+        targetPosition = newPosition;
+    }
+
+    private void CheckForChaseTargets()
+    {
+        if (IsObjectInRangeToChase(rangeToChase, out Collider2D collider))
+        {
+            if (!isConfirmingChase || potentialTarget != collider)
+            {
+                StartChaseConfirmation(collider);
+            }
+        }
+        else
+        {
+            ResetChaseConfirmation();
+        }
+    }
+
+    private void UpdateConfirmationTimers()
+    {
+        if (isConfirmingChase)
+        {
+            currentChaseTimer += Time.deltaTime;
+            if (currentChaseTimer >= chaseConfirmationTime)
+            {
+                ConfirmChaseTransition();
+            }
+        }
+    }
+
+    private void StartChaseConfirmation(Collider2D target)
+    {
+        if (potentialTarget != target)
+        {
+            isConfirmingChase = true;
+            currentChaseTimer = 0f;
+            potentialTarget = target;
+        }
+    }
+
+    private void ResetChaseConfirmation()
+    {
+        currentChaseTimer = 0f;
+        isConfirmingChase = false;
+        potentialTarget = null;
+    }
+
+    private void ConfirmChaseTransition()
+    {
+        if (potentialTarget != null)
+        {
+            StateMachine.SwitchState(StateMachine.ChaseState);
+            EnemyChaseState enemyChaseState = StateMachine.CurrentState as EnemyChaseState;
+            enemyChaseState?.EnterState(potentialTarget.transform);
+        }
+        ResetChaseConfirmation();
+    }
+
+    bool IsObjectInRangeToChase(float range, out Collider2D colliderObj)
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        foreach (var collider in colliders)
+        {
+            if (collider == null) continue;
+            
+            PlayerReceiveDamageBehaviour receiveDamageBehaviour = collider.GetComponent<PlayerReceiveDamageBehaviour>();
+            if (receiveDamageBehaviour != null)
+            {
+                colliderObj = collider;
+                return true;
+            }
+        }
+        colliderObj = null;
+        return false;
+    }
+
+    public void SetOriginalPosition(Vector3 position)
+    {
+        originalPosition = position;
+    }
+    
+    public override void OnDrawGizmos()
+    {
+        if (transform == null) return;
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, rangeToChase);
+
+        if (isConfirmingChase)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, rangeToChase);
+        }
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(originalPosition, moveRange);
+
+        if (targetPosition != Vector3.zero)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(targetPosition, 0.3f);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(transform.position, targetPosition);
+        }
+
+        if (isConfirmingChase && currentChaseTimer > 0)
+        {
+            float progress = currentChaseTimer / chaseConfirmationTime;
+            Gizmos.color = Color.Lerp(Color.green, Color.red, progress);
+            Gizmos.DrawSphere(transform.position + Vector3.up * 1.5f, 0.15f);
         }
     }
 }

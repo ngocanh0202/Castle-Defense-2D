@@ -1,72 +1,119 @@
 using System.Collections;
+using Common2D.CreateGameObject2D;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Animator))]
 public class EnemyStateMachine : MonoBehaviour
 {
+    [Header("Components")]
     public Animator animator;
     public SpriteRenderer spriteRenderer;
+    public Gun enemyGun;
+    [Header("Enemy States")]
     public EnemyBaseState CurrentState;
     public EnemyIdleState IdleState;
-    public EnemyMoveState MoveState;
     public EnemyChaseState ChaseState;
     public EnemyAttackState AttackState;
-    public EnemyReturnState ReturnState;
     public EnemyDeathState DeathState;
     public EnemyDamgedState DamagedState;
+    public EnemyMainMissionState MainMissionState;
+    [Header("Enemy speed")]
+    [SerializeField] private float idleSpeed = 1f;
+    [SerializeField] private float chaseSpeed = 2f;
+    [Header("Enemy range")]
+    [SerializeField] private float moveRange = 1f;
+    [SerializeField] private float rangeToChase = 6f;
+    [SerializeField] private float rangeToAttack = 4f;
+    [Header("Other components")]
+    public Transform mainTowerTransform;
 
-    void Start()
+    public void InitializeComponents()
+    {
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
+        
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+        
+        if (enemyGun == null)
+        {
+            enemyGun = GetComponentInChildren<Gun>();
+        }
+        
+        if (mainTowerTransform == null)
+        {
+            mainTowerTransform = GameObject.Find("MainTower")?.transform;
+        }
+    }
+
+    void Awake()
     {
         InitializeComponents();
-        IdleState = new EnemyIdleState(this, animator);
-        MoveState = new EnemyMoveState(this, animator);
-        ChaseState = new EnemyChaseState(this, animator);
-        AttackState = new EnemyAttackState(this, animator);
-        ReturnState = new EnemyReturnState(this, animator);
+        IdleState = new EnemyIdleState(this, animator, moveRange, idleSpeed, rangeToChase);
+        ChaseState = new EnemyChaseState(this, animator, rangeToChase, chaseSpeed, rangeToAttack);
+        AttackState = new EnemyAttackState(this, animator, rangeToAttack, enemyGun);
         DeathState = new EnemyDeathState(this, animator);
         DamagedState = new EnemyDamgedState(this, animator);
+        if (mainTowerTransform != null)
+        {
+            MainMissionState = new EnemyMainMissionState(this, mainTowerTransform, animator, rangeToChase, idleSpeed);
+            CurrentState = MainMissionState;
+        }
+        else
+        {
+            CurrentState = IdleState;
+        }
 
-        CurrentState = IdleState;
         CurrentState.EnterState();
     }
 
     void Update()
     {
+        if (CurrentState == null) return;
         CurrentState.UpdateState();
     }
     void FixedUpdate()
     {
+        if (CurrentState == null) return;
         CurrentState.FixUpdateState();
     }
 
     public void SwitchState(EnemyBaseState newState)
     {
+        if (newState == null || newState == CurrentState) return;
         CurrentState = newState;
         CurrentState.EnterState();
     }
 
-    private void InitializeComponents()
+    public bool IsState(EnemyBaseState other)
     {
-        animator = GetComponent<Animator>();
-        if (animator == null)
+        if (other == null) return false;
+        return this.CurrentState == other;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (CurrentState != null)
         {
-            Debug.LogError("Animator component not found on the enemy!");
-        }
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
-        {
-            Debug.LogError("SpriteRenderer component not found on the enemy!");
+            CurrentState.OnDrawGizmos();
         }
     }
 
-    public IEnumerator ChangeColorCoroutine(Color originalColor, Color targetColor, float duration)
+    void OnEnable()
     {
-        float elapsedTime = 0f;
-        while (elapsedTime < duration)
+        InitializeComponents();
+        if (mainTowerTransform == null)
         {
-            spriteRenderer.color = Color.Lerp(originalColor, targetColor, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
+            SwitchState(IdleState);
+        }
+        else
+        {
+            SwitchState(MainMissionState);
         }
     }
 }

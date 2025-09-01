@@ -4,18 +4,22 @@ using UnityEngine;
 
 public class BoomExplosionState : BoomBaseState
 {
-    float explosionRadius;
-    float explosionSpeed;
+    float explosionRange;
+    float timeToExplode;
+    float timer;
+    Vector3 transformScale;
 
-    public BoomExplosionState(CircleCollider2D circleCollider, Animator animator, Transform transform, Boom boom) : base(circleCollider, animator, transform, boom)
+    public BoomExplosionState(CircleCollider2D circleCollider, Animator animator, Transform transform, Boom boom, float explosionRange) : base(circleCollider, animator, transform, boom)
     {
-        explosionRadius = circleCollider.radius + 1.25f;
-        explosionSpeed = 1f;
+        transformScale = transform.localScale;
+        this.explosionRange = explosionRange;
+        timeToExplode = boom.timeToExplode;
     }
 
     public override void EnterState()
     {
-        
+        timer = 0f;
+        Transform.localScale = transformScale;
     }
 
     public override void FixUpdateState()
@@ -28,6 +32,11 @@ public class BoomExplosionState : BoomBaseState
         
     }
 
+    public override void OnTriggerEnter2D(Collider2D collision)
+    {
+        
+    }
+
     public override void UpdateState()
     {
         if (Animator != null && Animator.GetCurrentAnimatorStateInfo(0).IsName("Explosion"))
@@ -36,9 +45,12 @@ public class BoomExplosionState : BoomBaseState
         }
         Transform.Translate(Vector2.zero);
 
-        if (CircleCollider.radius < explosionRadius)
+        if (timer < timeToExplode)
         {
-            CircleCollider.radius += Time.deltaTime * explosionSpeed;
+            timer += Time.deltaTime;
+            float newRadius = Transform.localScale.x + Time.deltaTime * explosionRange;
+            // CircleCollider.radius = newRadius;
+            Transform.localScale = new Vector3(newRadius, newRadius, 1);
         }
         else
         {

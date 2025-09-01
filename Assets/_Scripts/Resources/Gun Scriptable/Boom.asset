@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49d365e358f7bb144969e1746ef41cee, type: 3}
   m_Name: Boom
   m_EditorClassIdentifier: 
-  maxAmmo: 5
-  numberOfBullets: 5
+  maxAmmo: 10
+  numberOfBullets: 10
   countDown: 1.75
   speedReloadAmmo: 0.5
   bulletState:
-    speed: 2
-    damage: 20
+    speed: 2.5
+    damage: 5
     lifeTime: 7

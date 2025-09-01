@@ -2,6 +2,7 @@ using UnityEngine;
 
 public interface IShootingStrategy
 {
+    string PoolNameString { get; set; }
     float GetCountDown();
     float SetCountDown(float value);
     int GetNumberOfBullets();

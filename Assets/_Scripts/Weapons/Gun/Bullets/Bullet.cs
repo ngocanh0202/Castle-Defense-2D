@@ -2,9 +2,8 @@ using System;
 using Common2D;
 using UnityEngine;
 
-public abstract class Bullet : MonoBehaviour, IPooler
+public abstract class Bullet : CommonPoolObject, ISendDamage
 {
-    public event EventHandler<PoolerEventArgs> OnSetInactive;
     [Header("Bullet Settings")]
     [SerializeField] public string poolName;
     [SerializeField] protected float speed = 10f;
@@ -12,7 +11,9 @@ public abstract class Bullet : MonoBehaviour, IPooler
     [SerializeField] protected float lifeTime = 5f;
     [SerializeField] public float timer = 0f;
     [SerializeField] protected bool isBulletTime = true;
-
+    [Header("Shooter")]
+    [SerializeField] protected Transform shooterTransform;
+    public override string PoolName { get => poolName; set => poolName = value; }    
     protected abstract void SetInitPooler();
 
     virtual protected void Start()
@@ -31,10 +32,6 @@ public abstract class Bullet : MonoBehaviour, IPooler
         isBulletTime = true;
         InitValue();
     }
-    void OnDisable()
-    {
-        OnSetInactive?.Invoke(this, new PoolerEventArgs { key = poolName });
-    }
 
     void InitValue()
     {
@@ -52,6 +49,11 @@ public abstract class Bullet : MonoBehaviour, IPooler
         this.lifeTime = lifeTime;
     }
 
+    public void SetShooterTransform(Transform shooterTransform)
+    {
+        this.shooterTransform = shooterTransform;
+    }
+
     private void BulletTimeLife()
     {
         if (!isBulletTime)
@@ -64,5 +66,23 @@ public abstract class Bullet : MonoBehaviour, IPooler
             gameObject.SetActive(false);
             timer = 0f;
         }
+    }
+
+    protected virtual void OnTriggerEnter2D(Collider2D collision)
+    {
+          if (collision.gameObject == shooterTransform?.gameObject)
+            return;
+        IReceiveDamage receiveDamage = collision.GetComponent<IReceiveDamage>();
+        if (receiveDamage != null && !shooterTransform.CompareTag(collision.tag))
+        {
+            SendDamage(damage, receiveDamage);
+            gameObject.SetActive(false);
+        }
+    }
+
+
+    public void SendDamage(float damage, IReceiveDamage target)
+    {
+        target.ReceiveDamage(damage);
     }
 }

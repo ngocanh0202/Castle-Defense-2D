@@ -4,6 +4,7 @@ using Common2D;
 using Common2D.CreateGameObject2D;
 using Common2D.EventMouse2D;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public enum InputType
 {
@@ -12,16 +13,19 @@ public enum InputType
     Attack,
     SetBulletStrategy,
     ReloadAmmo,
-    OpenInventory
+    OpenInventory,
+    OnSetWeaponRotation
 }
 
 public class InputManager : Singleton<InputManager>
 {
     [SerializeField] private bool canInput;
+    [SerializeField] private Quaternion weaponRotation;
     public event Action<Vector2> OnMove;
     public event Action<bool> OnStop;
     public event Action OnAttack;
-    public event Action<KeyOfObjPooler> OnSetBulletStrategy;
+    public event Action<KeyGuns> OnSetBulletStrategy;
+    public event Action<Action<Transform>> OnSetWeaponRotation;
     public event Action OnReloadAmmo;
     public event Action OnOpenInventory;
     public List<InputType> inputTypes;
@@ -29,18 +33,17 @@ public class InputManager : Singleton<InputManager>
     {
         inputTypes = new List<InputType>((InputType[])Enum.GetValues(typeof(InputType)));
         canInput = true;
-        PopupText popupText = ResourcesManager.GetPopupTextPrefab().GetComponent<PopupText>();
-        ObjectPooler.InitObjectPooler<PopupText>(
-            KeyOfObjPooler.PopupText.ToString(),
-            3,
-            popupText,
-            null
-        );
     }
     void Update()
     {
         if (!canInput)
             return;
+
+        if (IsInputTypeCanBeUsed(InputType.Attack))
+        {
+            OnSetWeaponRotation?.Invoke(
+                (TransformObj) => EventMouse2D.LookAtMouse2D(TransformObj, 5f));
+        }
 
         float moveX = Input.GetAxis("Horizontal");
         float moveY = Input.GetAxis("Vertical");
@@ -57,6 +60,9 @@ public class InputManager : Singleton<InputManager>
 
         if (Input.GetMouseButtonDown(0) && IsInputTypeCanBeUsed(InputType.Attack))
         {
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
             OnAttack?.Invoke();
         }
 
@@ -69,15 +75,15 @@ public class InputManager : Singleton<InputManager>
         if( IsInputTypeCanBeUsed(InputType.Attack))
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                OnSetBulletStrategy?.Invoke(KeyOfObjPooler.BaseBullet);
+                OnSetBulletStrategy?.Invoke(KeyGuns.BaseBullet);
             }
             else if (Input.GetKeyDown(KeyCode.Alpha2))
             {
-                OnSetBulletStrategy?.Invoke(KeyOfObjPooler.RatlingGunBullet);
+                OnSetBulletStrategy?.Invoke(KeyGuns.RatlingGunBullet);
             }
             else if (Input.GetKeyDown(KeyCode.Alpha3))
             {
-                OnSetBulletStrategy?.Invoke(KeyOfObjPooler.Boom);
+                OnSetBulletStrategy?.Invoke(KeyGuns.Boom);
             }
 
         if (Input.GetKeyDown(KeyCode.R) && IsInputTypeCanBeUsed(InputType.ReloadAmmo))

@@ -9,25 +9,25 @@ using UnityEngine;
 public class Gun : Weapon
 {
     [SerializeField] Transform bulletHolder;
-    [SerializeField] bool canShoot = true ;
+    [SerializeField] bool canShoot = true;
     [SerializeField] float countDown = 0.5f;
     [SerializeField] int maxAmmo;
     [SerializeField] int numberOfBullets;
     [SerializeField] float speedReloadAmmo;
-    private IShootingStrategy currentBulletStrategy;
-    private KeyOfObjPooler currentBulletStrategyType = KeyOfObjPooler.BaseBullet;
+    private CommonBulletStrategy currentBulletStrategy;
+    private KeyGuns currentBulletStrategyType;
     private Coroutine attackCoroutine;
     private Coroutine reloadCoroutine;
-    private Dictionary<KeyOfObjPooler, IShootingStrategy> bulletStrategies;
-    public event Action<IShootingStrategy, string> OnSetBulletStrategy;
+    private Dictionary<KeyGuns, CommonBulletStrategy> bulletStrategies;
+    public event Action<CommonBulletStrategy, string> OnSetBulletStrategy;
     public event Action<int, int> OnAmmoChanged;
 
-    protected override void Start()
+    protected override void Awake()
     {
+        currentBulletStrategyType = KeyGuns.None;
         canShoot = true;
         InitializeBulletHolder();
         InitializeBulletStrategies();
-        SetStrategy(KeyOfObjPooler.BaseBullet);
     }
 
     private void InitializeBulletHolder()
@@ -44,11 +44,11 @@ public class Gun : Weapon
 
     private void InitializeBulletStrategies()
     {
-        bulletStrategies = new Dictionary<KeyOfObjPooler, IShootingStrategy>
+        bulletStrategies = new Dictionary<KeyGuns, CommonBulletStrategy>
         {
-            { KeyOfObjPooler.BaseBullet, new BaseBulletStrategy()},
-            { KeyOfObjPooler.RatlingGunBullet, new RatlingGunStrategy()},
-            { KeyOfObjPooler.Boom, new BoomStrategy()}
+            { KeyGuns.BaseBullet, new BaseBulletStrategy()},
+            { KeyGuns.RatlingGunBullet, new RatlingGunStrategy()},
+            { KeyGuns.Boom, new BoomStrategy()}
         };
 
         foreach (var strategy in bulletStrategies.Values)
@@ -57,9 +57,9 @@ public class Gun : Weapon
         }
     }
 
-    public void SetStrategy(KeyOfObjPooler newStrategyType)
+    public void SetStrategy(KeyGuns newStrategyType)
     {
-        if (bulletStrategies.ContainsKey(newStrategyType))
+        if (bulletStrategies.ContainsKey(newStrategyType) && newStrategyType != currentBulletStrategyType)
         {
             currentBulletStrategy = bulletStrategies[newStrategyType];
             countDown = currentBulletStrategy.GetCountDown();
@@ -68,6 +68,7 @@ public class Gun : Weapon
             speedReloadAmmo = currentBulletStrategy.GetSpeedReloadAmmo();
             currentBulletStrategyType = newStrategyType;
             canShoot = true;
+            isAttacking = false;
             OnSetBulletStrategy?.Invoke(
                 currentBulletStrategy, currentBulletStrategyType.ToString()
             );
@@ -75,13 +76,16 @@ public class Gun : Weapon
         }
     }
 
-    public override void Attack()
+    public override void Attack(bool isPlayer = true)
     {
         if (currentBulletStrategy != null && canShoot && numberOfBullets > 0)
         {
             currentBulletStrategy.Shoot(transform);
-            numberOfBullets--;
-            currentBulletStrategy.SetNumberOfBullets(numberOfBullets);
+            if (isPlayer)
+            {
+                numberOfBullets--;
+                currentBulletStrategy.SetNumberOfBullets(numberOfBullets);
+            }
             canShoot = false;
             OnAmmoChanged?.Invoke(numberOfBullets, maxAmmo);
             attackCoroutine = StartCoroutine(AttackCoroutine());
@@ -93,20 +97,14 @@ public class Gun : Weapon
         if (ammo <= 0 || numberOfBullets >= maxAmmo)
         {
             NotificationSystem.Instance.ShowNotification(
-                "No ammo to reload or already full!", 
+                "No ammo to reload or already full!",
                 NotificationType.Warning
             );
             return;
         }
-
-        // InputManager.Instance.DisableInput(
-        //     InputType.ReloadAmmo,
-        //     InputType.Attack,
-        //     InputType.Move
-        // );
-
         if (attackCoroutine != null)
         {
+            isAttacking = false;
             StopCoroutine(attackCoroutine);
         }
         if (reloadCoroutine == null)
@@ -134,26 +132,27 @@ public class Gun : Weapon
         }
         reloadCoroutine = null;
         canShoot = true;
-        // InputManager.Instance.EnableInput();
     }
 
     IEnumerator AttackCoroutine()
     {
+        isAttacking = true;
         yield return new WaitForSeconds(countDown);
         canShoot = true;
         StopAttack();
     }
 
-    public void ChangeStrategy(KeyOfObjPooler newBulletStrategy)
+    void OnEnable()
     {
-        if (newBulletStrategy == currentBulletStrategyType)
-        {
-            return;
-        }
-        if (attackCoroutine != null)
+        isAttacking = false;
+        canShoot = true;
+    }
+
+    void OnDisable()
+    {
+        if(attackCoroutine != null)
         {
             StopCoroutine(attackCoroutine);
         }
-        SetStrategy(newBulletStrategy);
     }
 }
