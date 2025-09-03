@@ -90,6 +90,7 @@ public class PlayerController : Singleton<PlayerController>
         if (IsStop)
         {
             rb.velocity = Vector2.zero;
+            // Hello
         }
     }
 
