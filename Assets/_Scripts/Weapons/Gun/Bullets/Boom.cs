@@ -106,7 +106,7 @@ public class Boom : Bullet
                 isExploded = true;
                 explodedTimer = 0f;
             }
-            else if (receiveDamage != null && !shooterTransform.CompareTag(collider.tag))
+            else if (receiveDamage != null && (shooterTransform == null || !shooterTransform.CompareTag(collider.tag)))
             {
                 isBulletTime = false;
                 isExploded = true;
