@@ -5,56 +5,41 @@ using UnityEngine;
 public class EnemyMainMissionState : EnemyBaseState
 {
     Transform transform;
-    Transform targetTransform;
-    Vector3 targetPosition;
-    float rangeToChase;
+    Transform mainTargetTransform;
+
     float stateCheckDelay = 0.2f; 
     float lastStateCheckTime;
     
     float chaseConfirmationTime = 0.5f; 
     float currentChaseTimer;
     bool isConfirmingChase;
-    Collider2D potentialTarget;
-    
-    float positionThreshold = 0.5f; 
 
-    float idleSpeed = 1f;
+    Collider2D potentialTarget;
+    float positionThreshold = 0.5f; 
     public EnemyMainMissionState(
-        EnemyStateMachine stateMachine, Transform targetTransform, Animator animator, float rangeToChase, float idleSpeed) :
-        base(stateMachine, animator)
+        EnemyStateMachine stateMachine, Transform mainTargetTransform, Animator animator, EnemyStat enemyStat) :
+        base(stateMachine, animator, enemyStat)
     {
         transform = stateMachine.transform;
-        this.targetTransform = targetTransform;
-        targetPosition = targetTransform.position;
-        this.rangeToChase = rangeToChase;
-        this.idleSpeed = idleSpeed;
+        this.mainTargetTransform = mainTargetTransform;
     }
 
     public override void EnterState()
     {
-        if(targetTransform == null || !targetTransform.gameObject.activeSelf)
-        {
-            StateMachine.SwitchState(StateMachine.IdleState);
-            return;
-        }
         ResetStateChecking();
     }
 
     public override void UpdateState()
     {
-        float distanceToTarget = Vector2.Distance(transform.position, targetPosition);
+        if (mainTargetTransform == null) return;
+        float distanceToTarget = Vector2.Distance(transform.position, mainTargetTransform.position);
         if (distanceToTarget > positionThreshold)
         {
             StateMachine.transform.position = Vector2.MoveTowards(
                 StateMachine.transform.position,
-                targetPosition,
-                Time.deltaTime * idleSpeed
+                mainTargetTransform.position,
+                Time.deltaTime * EnemyStat.GetStatValue(EnemyStatType.IdleSpeed)
             );
-        }
-        else
-        {
-            StateMachine.SwitchState(StateMachine.IdleState);
-            return;
         }
 
         if (Time.time - lastStateCheckTime >= stateCheckDelay)
@@ -76,7 +61,7 @@ public class EnemyMainMissionState : EnemyBaseState
 
     private void CheckForChaseTargets()
     {
-        if (IsObjectInRangeToChase(rangeToChase, out Collider2D collider))
+        if (IsObjectInRangeToChase(EnemyStat.GetStatValue(EnemyStatType.RangeToChase), out Collider2D collider))
         {
             if (!isConfirmingChase || potentialTarget != collider)
             {
@@ -135,9 +120,8 @@ public class EnemyMainMissionState : EnemyBaseState
         foreach (var collider in colliders)
         {
             if (collider == null) continue;
-            
-            PlayerReceiveDamageBehaviour receiveDamageBehaviour = collider.GetComponent<PlayerReceiveDamageBehaviour>();
-            if (receiveDamageBehaviour != null)
+
+            if (collider.CompareTag("Player"))
             {
                 colliderObj = collider;
                 return true;
@@ -152,12 +136,12 @@ public class EnemyMainMissionState : EnemyBaseState
         if (transform == null) return;
 
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, rangeToChase);
+        Gizmos.DrawWireSphere(transform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToChase));
 
         if (isConfirmingChase)
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, rangeToChase);
+            Gizmos.DrawWireSphere(transform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToChase));
         }
     }
 }

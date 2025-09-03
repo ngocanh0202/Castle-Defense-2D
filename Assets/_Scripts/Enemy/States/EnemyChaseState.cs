@@ -4,9 +4,6 @@ public class EnemyChaseState : EnemyBaseState
 {
     Transform target;
     Transform enemyTransform;
-    public float rangeToChase; 
-    float chaseSpeed;
-    float rangeToAttack = 3f;
     
     private float stateCheckDelay = 0.2f;
     private float lastStateCheckTime;
@@ -15,13 +12,10 @@ public class EnemyChaseState : EnemyBaseState
     private bool isConfirmingMainMissionState;
     private Collider2D tempTargetCollider; 
 
-    public EnemyChaseState(EnemyStateMachine stateMachine, Animator animator, float rangeToChase, float chaseSpeed, float rangeToAttack) : base(stateMachine, animator)
+    public EnemyChaseState(EnemyStateMachine stateMachine, Animator animator, EnemyStat enemyStat) : base(stateMachine, animator, enemyStat)
     {
         enemyTransform = stateMachine.transform;
         target = null;
-        this.rangeToChase = rangeToChase;
-        this.chaseSpeed = chaseSpeed;
-        this.rangeToAttack = rangeToAttack;
     }
 
     public override void EnterState()
@@ -30,9 +24,9 @@ public class EnemyChaseState : EnemyBaseState
         ResetStateChecking();
     }
 
-    public void EnterState(Transform player)
+    public void EnterState(Transform tower)
     {
-        target = player;
+        target = tower;
         ResetStateChecking();
     }
 
@@ -46,14 +40,11 @@ public class EnemyChaseState : EnemyBaseState
 
     public override void UpdateState()
     {
-        if (target == null || target.gameObject.activeSelf == false)
-        {
-            StateMachine.SwitchState(StateMachine.IdleState);
-            return;
-        }
+        if(target != null)
+            enemyTransform.position = Vector2.MoveTowards(enemyTransform.position, target.position, EnemyStat.GetStatValue(EnemyStatType.ChaseSpeed) * Time.deltaTime);
+        else
+            StateMachine.SwitchState(StateMachine.MainMissionState);
 
-        enemyTransform.position = Vector2.MoveTowards(enemyTransform.position, target.position, chaseSpeed * Time.deltaTime);
-        
         if (Time.time - lastStateCheckTime >= stateCheckDelay)
         {
             CheckStateTransitions();
@@ -76,9 +67,10 @@ public class EnemyChaseState : EnemyBaseState
         else
         {
             CancelAttackConfirmation();
-            
+
+            if (target == null) return;
             float distanceToTarget = Vector2.Distance(enemyTransform.position, target.position);
-            if (distanceToTarget > rangeToChase)
+            if (distanceToTarget > EnemyStat.GetStatValue(EnemyStatType.RangeToChase))
             {
                 if (!isConfirmingMainMissionState)
                 {
@@ -148,11 +140,12 @@ public class EnemyChaseState : EnemyBaseState
 
     private bool IsObjectInRangeToAttack(out Collider2D colliderObj)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(enemyTransform.position, rangeToAttack);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToAttack));
         foreach (var collider in colliders)
         {
-            PlayerReceiveDamageBehaviour receiveDamageBehaviour = collider.GetComponent<PlayerReceiveDamageBehaviour>();
-            if (receiveDamageBehaviour != null)
+            if (collider == null) continue;
+            
+            if (collider.CompareTag("Player"))
             {
                 colliderObj = collider;
                 return true;
@@ -167,17 +160,17 @@ public class EnemyChaseState : EnemyBaseState
         if (enemyTransform == null) return;
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(enemyTransform.position, rangeToAttack);
-        
+        Gizmos.DrawWireSphere(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToAttack));
+
         if (isConfirmingAttack)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(enemyTransform.position, rangeToAttack);
+            Gizmos.DrawWireSphere(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToAttack));
         }
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(enemyTransform.position, rangeToChase);
-        
+        Gizmos.DrawWireSphere(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToChase));
+
         if (target != null)
         {
             Gizmos.color = Color.magenta;

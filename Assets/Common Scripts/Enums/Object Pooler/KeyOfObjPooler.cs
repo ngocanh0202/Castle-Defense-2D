@@ -4,5 +4,6 @@ public enum KeyOfObjPooler
     PopupText,
     ItemDrop,
     Countdown,
-    Enemy
+    Enemy,
+    Tower
 }

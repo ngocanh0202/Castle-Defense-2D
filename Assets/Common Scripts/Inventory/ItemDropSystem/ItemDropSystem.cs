@@ -14,17 +14,14 @@ public class ItemDropSystem : Singleton<ItemDropSystem>
         ItemDrop itemDrop = ResourcesManager.GetItemDrop().GetComponent<ItemDrop>();
         itemDatabase = ResourcesManager.GetItemDatabase();
         itemsToDrop = itemDatabase.GetItemsByBullet();
-        ObjectPooler.InitObjectPooler<ItemDrop>(KeyOfObjPooler.ItemDrop.ToString(), 4, itemDrop, (itemDrop) =>
-        {
-            itemDrop.transform.SetParent(this.transform);
-        });
+        ObjectPooler.Instance.InitObjectPooler<ItemDrop>(KeyOfObjPooler.ItemDrop.ToString(), 4, itemDrop);
     }
 
     public void OnEnemyDie(Transform enemyTransform)
     {
         if (Random.value < rateToDrop)
         {
-            ItemDrop itemDrop = ObjectPooler.GetObject<ItemDrop>(KeyOfObjPooler.ItemDrop.ToString(), false);
+            ItemDrop itemDrop = ObjectPooler.Instance.GetObject<ItemDrop>(KeyOfObjPooler.ItemDrop.ToString(), false);
             if (itemDrop != null)
             {
                 Item randomItem = itemsToDrop[Random.Range(0, itemsToDrop.Count)];

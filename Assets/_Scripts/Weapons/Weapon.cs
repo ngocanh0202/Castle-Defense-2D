@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public abstract class Weapon : MonoBehaviour{
-    [Header("Weapon Status")]
+    [Header("Weapon Stat")]
     [SerializeField] public bool isAttacking = false;
     [SerializeField] protected Transform parentTransform;
     [SerializeField] protected Transform weaponTransform;
@@ -12,10 +12,6 @@ public abstract class Weapon : MonoBehaviour{
         parentTransform = transform.parent;
         weaponTransform = transform;
         radius = 3f;
-    }
-    protected virtual void Update()
-    {
-
     }
     public abstract void Attack(bool isPlayer = false);
     protected virtual void StopAttack()

@@ -33,7 +33,7 @@ RectTransform:
   m_Father: {fileID: 4268373029056351406}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -208,17 +208,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a53c8065010b34f94ddcf1c556810b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isAttacking: 0
-  parentTransform: {fileID: 0}
-  weaponTransform: {fileID: 0}
-  radius: 0
-  distance: 0
-  bulletHolder: {fileID: 0}
   canShoot: 1
+  isAttacking: 0
   countDown: 0.5
   maxAmmo: 0
   numberOfBullets: 0
   speedReloadAmmo: 0
+  ObjectStatus: {fileID: 0}
 --- !u!1 &3152552122197447551
 GameObject:
   m_ObjectHideFlags: 0
@@ -368,10 +364,11 @@ GameObject:
   - component: {fileID: 9114693579037337044}
   - component: {fileID: 7518806224201950912}
   - component: {fileID: 2435643176404801080}
-  - component: {fileID: 5031457318816930514}
   - component: {fileID: 5806292448618618700}
   - component: {fileID: 4601187079844569610}
   - component: {fileID: 1368326564557274528}
+  - component: {fileID: 422886058725670064}
+  - component: {fileID: 4063729993544351287}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -469,8 +466,103 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!68 &5031457318816930514
-EdgeCollider2D:
+--- !u!114 &5806292448618618700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5733648620279616555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 159b824bd9897a54f833785fc24c0f5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  enemyStat: {fileID: 0}
+  enemyGun: {fileID: 0}
+  mainTowerTransform: {fileID: 0}
+--- !u!114 &4601187079844569610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5733648620279616555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10f1f6e3789c0434b85eeefbfb725579, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentHealth: 0
+  maxHealth: 100
+  damageInterval: 0.1
+  isInvulnerable: 0
+  healthBar: {fileID: 0}
+  objectStatus: {fileID: 0}
+--- !u!114 &1368326564557274528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5733648620279616555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d28b01243f6d24f9fb0522ab51ed04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &422886058725670064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5733648620279616555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5153714ac6d34a4481efca4ddd20ff9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  vitality:
+    currentValue: 100
+    minValue: 1
+    maxValue: 100
+  defense:
+    currentValue: 10
+    minValue: 1
+    maxValue: 999
+  attack:
+    currentValue: 15
+    minValue: 1
+    maxValue: 999
+  level:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+  idleSpeed:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+  chaseSpeed:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+  moveRange:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+  rangeToChase:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+  rangeToAttack:
+    currentValue: 0
+    minValue: 0
+    maxValue: 0
+--- !u!60 &4063729993544351287
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -502,67 +594,21 @@ EdgeCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  m_EdgeRadius: 0
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.28866667}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
   m_Points:
-  - {x: -0.5663562, y: -0.30055314}
-  - {x: -0.0015780926, y: 0.635774}
-  - {x: 0.47173166, y: -0.10893403}
-  - {x: 0.5757396, y: -0.31069142}
-  - {x: -0.55221105, y: -0.29107383}
-  m_AdjacentStartPoint: {x: 0, y: 0}
-  m_AdjacentEndPoint: {x: 0, y: 0}
-  m_UseAdjacentStartPoint: 0
-  m_UseAdjacentEndPoint: 0
---- !u!114 &5806292448618618700
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5733648620279616555}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 159b824bd9897a54f833785fc24c0f5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animator: {fileID: 0}
-  spriteRenderer: {fileID: 0}
-  enemyGun: {fileID: 0}
-  idleSpeed: 1
-  chaseSpeed: 2
-  moveRange: 1
-  rangeToChase: 6
-  rangeToAttack: 4
-  mainTowerTransform: {fileID: 0}
---- !u!114 &4601187079844569610
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5733648620279616555}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10f1f6e3789c0434b85eeefbfb725579, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  damageInterval: 0.1
-  isInvulnerable: 0
-  healthBar: {fileID: 0}
---- !u!114 &1368326564557274528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5733648620279616555}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82d28b01243f6d24f9fb0522ab51ed04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+    m_Paths:
+    - - {x: 0, y: 0.5773587}
+      - {x: -0.5, y: -0.28866667}
+      - {x: 0.5, y: -0.28866667}
+  m_UseDelaunayMesh: 0
 --- !u!1 &8132219215375645781
 GameObject:
   m_ObjectHideFlags: 0

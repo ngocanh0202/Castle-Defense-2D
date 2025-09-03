@@ -30,7 +30,7 @@ public class PopupText : CommonPoolObject
             0.5f
         ).OnComplete(() =>
         {
-            if (ObjectPooler.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
+            if (ObjectPooler.Instance.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
             {
                 gameObject.SetActive(false);
             } 
@@ -66,7 +66,7 @@ public class PopupText : CommonPoolObject
         }
         transform.localPosition = endPos;
         yield return null;
-        if (ObjectPooler.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
+        if (ObjectPooler.Instance.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
         {
             gameObject.SetActive(false);
         }

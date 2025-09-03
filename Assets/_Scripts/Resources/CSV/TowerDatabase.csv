@@ -1,0 +1,4 @@
+id,towerName,towerLevel,towerDamge,towerRange,direction
+1,towerBaseBullet,1,2,4,1;1;1;1;1;1;1;1
+2,towerRatlingBullet,1,2,5,1;1;1;1;1;1;1;1
+3,towerBoom,1,3,6,1;1;1;1;1;1;1;1

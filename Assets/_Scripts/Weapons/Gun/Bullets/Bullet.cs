@@ -6,13 +6,15 @@ public abstract class Bullet : CommonPoolObject, ISendDamage
 {
     [Header("Bullet Settings")]
     [SerializeField] public string poolName;
-    [SerializeField] protected float speed = 10f;
-    [SerializeField] protected float damage = 10f;
-    [SerializeField] protected float lifeTime = 5f;
+    [SerializeField] public float speed = 10f;
+    [SerializeField] public float damage = 10f;
+    [SerializeField] public float plusDamage = 0f;
+    [SerializeField] public float incommingDamage { get => damage + plusDamage; set => throw new NotImplementedException();}
+    [SerializeField] public float lifeTime = 5f;
     [SerializeField] public float timer = 0f;
-    [SerializeField] protected bool isBulletTime = true;
+    [SerializeField] public bool isBulletTime = true;
     [Header("Shooter")]
-    [SerializeField] protected Transform shooterTransform;
+    [SerializeField] public Transform shooterTransform;
     public override string PoolName { get => poolName; set => poolName = value; }    
     protected abstract void SetInitPooler();
 
@@ -23,6 +25,7 @@ public abstract class Bullet : CommonPoolObject, ISendDamage
 
     virtual protected void Update()
     {
+        transform.Translate(Vector3.right * speed * Time.deltaTime);
         BulletTimeLife();
     }
 
@@ -49,9 +52,10 @@ public abstract class Bullet : CommonPoolObject, ISendDamage
         this.lifeTime = lifeTime;
     }
 
-    public void SetShooterTransform(Transform shooterTransform)
+    public void SetShooterStat(Transform shooterTransform, float plusDamage)
     {
         this.shooterTransform = shooterTransform;
+        this.plusDamage = plusDamage;
     }
 
     private void BulletTimeLife()
@@ -70,13 +74,17 @@ public abstract class Bullet : CommonPoolObject, ISendDamage
 
     protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
-          if (collision.gameObject == shooterTransform?.gameObject)
+        if (shooterTransform != null && collision?.gameObject == shooterTransform.gameObject)
             return;
+
         IReceiveDamage receiveDamage = collision.GetComponent<IReceiveDamage>();
-        if (receiveDamage != null && !shooterTransform.CompareTag(collision.tag))
+        if (receiveDamage != null)
         {
-            SendDamage(damage, receiveDamage);
-            gameObject.SetActive(false);
+            if (shooterTransform == null || !shooterTransform.CompareTag(collision.tag))
+            {
+                SendDamage(incommingDamage, receiveDamage);
+                gameObject.SetActive(false);
+            }
         }
     }
 

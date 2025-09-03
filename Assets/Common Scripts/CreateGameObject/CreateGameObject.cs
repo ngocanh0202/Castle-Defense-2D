@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using Utilities;
 
 namespace Common2D.CreateGameObject2D{
     public class CreateGameObject
@@ -154,9 +155,9 @@ namespace Common2D.CreateGameObject2D{
 
         public static TextMeshPro CreateTextPopup(string text, Vector2 position, Color color, Transform? prefabPopupText = null)
         {
-            if (ObjectPooler.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
+            if (ObjectPooler.Instance.IsObjectPoolerExist(KeyOfObjPooler.PopupText.ToString()))
             {
-                TextMeshPro textPopup = ObjectPooler.GetObject<PopupText>(KeyOfObjPooler.PopupText.ToString(), false).GetComponent<TextMeshPro>();
+                TextMeshPro textPopup = ObjectPooler.Instance.GetObject<PopupText>(KeyOfObjPooler.PopupText.ToString(), false).GetComponent<TextMeshPro>();
                 Transform transformPopup = textPopup.transform;
                 transformPopup.position = new Vector3(position.x, position.y, 0);
                 textPopup.text = text;

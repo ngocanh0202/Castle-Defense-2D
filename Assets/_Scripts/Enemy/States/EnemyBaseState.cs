@@ -10,10 +10,12 @@ public abstract class EnemyBaseState : IEnemyState, IState, IDrawGizmos
 {
     public EnemyStateMachine StateMachine { get; set ;}
     public Animator Animator { get; set ;}
-    public EnemyBaseState(EnemyStateMachine stateMachine, Animator animator)
+    public EnemyStat EnemyStat { get; set; }
+    public EnemyBaseState(EnemyStateMachine stateMachine, Animator animator, EnemyStat enemyStat)
     {
         this.StateMachine = stateMachine;
         this.Animator = animator;
+        this.EnemyStat = enemyStat;
     }
 
     public virtual void EnterState() {}

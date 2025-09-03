@@ -23,27 +23,23 @@ public class Testing : MonoBehaviour
         InputManager.Instance.OnSetWeaponRotation += OnSetWeaponRotation;
 
         PopupText popupText = ResourcesManager.GetPopupTextPrefab().GetComponent<PopupText>();
-        ObjectPooler.InitObjectPooler<PopupText>(
+        ObjectPooler.Instance.InitObjectPooler<PopupText>(
             KeyOfObjPooler.PopupText.ToString(),
             3,
-            popupText,
-            (textPopup) =>
-            {
-                textPopup.transform.SetParent(transformHolderText);
-            }
+            popupText
         );
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.M))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            ConfirmModalSystem.Instance.ShowConfirmModal("Are you sure to quit game?", 2, OnListenerClickAccept: () =>
+            ConfirmModalSystem.Instance.ShowConfirmModal("Are you sure reset game?", 2, OnListenerClickAccept: () =>
             {
-                NotificationSystem.Instance.ShowNotification("YES........!!", NotificationType.Info);
+                GameManager.Instance.ResetGame();
             });
         }
-        if (Input.GetKeyDown(KeyCode.N))
+        if (Input.GetKeyDown(KeyCode.C))
         {
             CreateGameObject.CreateCountdown(
                 5, Vector3.zero, CountdownOptions.Seconds, transformParent: GameObject.Find(StringDefault.Canvas.ToString()).transform, onFinish: (textMeshPro) =>
@@ -52,7 +48,7 @@ public class Testing : MonoBehaviour
                     Destroy(textMeshPro.gameObject);
                 });
         }
-        if (Input.GetKeyDown(KeyCode.B))
+        if (Input.GetKeyDown(KeyCode.P))
         {
             CreateGameObject.CreateTextPopup(
                 "Up", EventMouse2D.GetPositionOnMouse2D(), Color.yellow);

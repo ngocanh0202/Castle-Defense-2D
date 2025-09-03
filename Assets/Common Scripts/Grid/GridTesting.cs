@@ -4,13 +4,13 @@ using Common2D.AStartPathfinding;
 using Common2D.CreateGameObject2D;
 using Common2D.EventMouse2D;
 using UnityEngine;
+using Utilities;
 
 public class GridTesting : MonoBehaviour
 {
     [SerializeField] private GameObject prefadCamera;
     [SerializeField] private GameObject objMove;
     [SerializeField] float speed = 1f;
-    [SerializeField] private bool isDebug = true;
     private AStarPathfinding AStarPathfinding;
     private GridCustom<Node> gridCustom;
     [SerializeField] bool isDiagonalDistance = false;
@@ -18,7 +18,7 @@ public class GridTesting : MonoBehaviour
 
     void Awake()
     {
-        gridCustom = new GridCustom<Node>(30, 30, 1f, new Vector3(-9,-9), (x, y) => new Node(new Vector2Int(x, y), true), isDebug);
+        gridCustom = new GridCustom<Node>(30, 30, 1f, new Vector3(-9,-9), (nodeGrid,x, y) => new Node(new Vector2Int(x, y), true));
   
         AStarPathfinding = new AStarPathfinding();
     }
@@ -30,7 +30,7 @@ public class GridTesting : MonoBehaviour
             if(path.Count > 0)
             {
                 Node item = path[0];
-                Vector3 targetPosition = gridCustom.GetMiddlePositionItemGrid(item.position.x, item.position.y);
+                Vector3 targetPosition = GridUtils.GetMiddleInCell(item.position.x, item.position.y, 1f, new Vector3(-9, -9));
                 objMove.transform.position = Vector3.MoveTowards(objMove.transform.position, targetPosition, speed * Time.deltaTime);
                 if (Vector3.Distance(objMove.transform.position, targetPosition) < 0.1f)
                 {
@@ -61,7 +61,7 @@ public class GridTesting : MonoBehaviour
             {
                 path = AStarPathfinding.FindPath(
                         objMove.transform.position, 
-                        gridCustom.GetPositionInWorld(item.position.x, item.position.y), isDiagonalDistance, gridCustom);
+                        GridUtils.GetPosition(item.position.x, item.position.y, 1f, new Vector3(-9, -9)), isDiagonalDistance, gridCustom);
             }
         }
 
@@ -72,10 +72,8 @@ public class GridTesting : MonoBehaviour
             {
                 item.walkable = false;
                 gridCustom.SetItemWithPosition(EventMouse2D.GetPositionOnMouse(), item);
-                // gridCustom.ChangeTextMeshPro(item.position.x, item.position.y, item.ToString());
-                // gridCustom.ChangeColorSprite(item.position.x, item.position.y, Color.black);
                 CreateGameObject.CreateSpriteRenderer(
-                    gridCustom.GetMiddlePositionItemGrid(item.position.x, item.position.y), 
+                    GridUtils.GetMiddleInCell(item.position.x, item.position.y, 1f, new Vector3(-9, -9)), 
                     Color.blue, 3, new Vector3(1f, 1f, 1f),null);
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Common2D.Singleton
 {
@@ -6,10 +7,10 @@ namespace Common2D.Singleton
     {
         public GameManagerState CurrentGameState { get; private set; }
         public event Action<GameManagerState> OnGameStateChanged;
+
         protected override void Awake()
         {
             base.Awake();
-            // Todo: Add initialization code here if needed
         }
         public void ChangeState(GameManagerState newState)
         {
@@ -17,10 +18,12 @@ namespace Common2D.Singleton
             {
                 CurrentGameState = newState;
                 OnGameStateChanged?.Invoke(newState);
-
-                // Todo: Add any additional logic for state changes here
-                
             }
+        }
+
+        public void ResetGame()
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         }
     }
 }

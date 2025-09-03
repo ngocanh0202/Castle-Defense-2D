@@ -56,6 +56,19 @@ namespace Common2D.Singleton
             }
         }
 
+        protected void Start()
+        {
+            GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;
+        }
+
+        void HandleGameStateChanged(GameManagerState gameManagerState)
+        {
+            if (gameManagerState == GameManagerState.GameOver)
+            {
+                ShowNotification("Game Over!", NotificationType.Error, 5f);
+            }
+        }
+
         public void ShowNotification(string message,
             NotificationType type = NotificationType.Info,
             float duration = -1)

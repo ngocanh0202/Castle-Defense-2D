@@ -4,29 +4,23 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(EnemyStat))]
 public class EnemyStateMachine : MonoBehaviour
 {
     [Header("Components")]
     public Animator animator;
     public SpriteRenderer spriteRenderer;
+    public EnemyStat enemyStat;
     public Gun enemyGun;
     [Header("Enemy States")]
     public EnemyBaseState CurrentState;
     public EnemyIdleState IdleState;
     public EnemyChaseState ChaseState;
     public EnemyAttackState AttackState;
-    public EnemyDeathState DeathState;
-    public EnemyDamgedState DamagedState;
     public EnemyMainMissionState MainMissionState;
-    [Header("Enemy speed")]
-    [SerializeField] private float idleSpeed = 1f;
-    [SerializeField] private float chaseSpeed = 2f;
-    [Header("Enemy range")]
-    [SerializeField] private float moveRange = 1f;
-    [SerializeField] private float rangeToChase = 6f;
-    [SerializeField] private float rangeToAttack = 4f;
     [Header("Other components")]
     public Transform mainTowerTransform;
+    [SerializeField] private string CurrentStateName { get => CurrentState?.GetType().Name; }
 
     public void InitializeComponents()
     {
@@ -34,42 +28,47 @@ public class EnemyStateMachine : MonoBehaviour
         {
             animator = GetComponent<Animator>();
         }
-        
+
         if (spriteRenderer == null)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
-        
+
         if (enemyGun == null)
         {
             enemyGun = GetComponentInChildren<Gun>();
         }
-        
-        if (mainTowerTransform == null)
+        if (enemyStat == null)
         {
-            mainTowerTransform = GameObject.Find("MainTower")?.transform;
+            enemyStat = GetComponent<EnemyStat>();
         }
     }
 
     void Awake()
     {
         InitializeComponents();
-        IdleState = new EnemyIdleState(this, animator, moveRange, idleSpeed, rangeToChase);
-        ChaseState = new EnemyChaseState(this, animator, rangeToChase, chaseSpeed, rangeToAttack);
-        AttackState = new EnemyAttackState(this, animator, rangeToAttack, enemyGun);
-        DeathState = new EnemyDeathState(this, animator);
-        DamagedState = new EnemyDamgedState(this, animator);
+        InitializeStates();
+        CurrentState.EnterState();
+    }
+
+    private void InitializeStates()
+    {
+        IdleState = new EnemyIdleState(this, animator, enemyStat);
+        ChaseState = new EnemyChaseState(this, animator, enemyStat);
+        AttackState = new EnemyAttackState(this, animator, enemyStat, enemyGun);
+        if (mainTowerTransform == null)
+        {
+            mainTowerTransform = GameObject.Find("MainTower")?.transform;
+        }
         if (mainTowerTransform != null)
         {
-            MainMissionState = new EnemyMainMissionState(this, mainTowerTransform, animator, rangeToChase, idleSpeed);
+            MainMissionState = new EnemyMainMissionState(this, mainTowerTransform, animator, enemyStat);
             CurrentState = MainMissionState;
         }
         else
         {
             CurrentState = IdleState;
         }
-
-        CurrentState.EnterState();
     }
 
     void Update()
@@ -107,6 +106,7 @@ public class EnemyStateMachine : MonoBehaviour
     void OnEnable()
     {
         InitializeComponents();
+        InitializeStates();
         if (mainTowerTransform == null)
         {
             SwitchState(IdleState);

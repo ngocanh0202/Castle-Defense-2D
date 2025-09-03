@@ -28,7 +28,7 @@ public class ItemDrop : CommonPoolObject
     void Update()
     {
         imageTransform.Rotate(0, 360 * Time.deltaTime, 0);
-        if (IsPlayerInArea())
+        if (IsPlayerInArea(out playerTransform))
         {
             Vector3 direction = (playerTransform.position - transform.position).normalized;
             transform.position += direction * moveSpeed * Time.deltaTime;
@@ -55,8 +55,6 @@ public class ItemDrop : CommonPoolObject
 
     void InitializedComponents()
     {
-        if (playerTransform == null)
-            playerTransform = FindObjectOfType<PlayerController>().transform;
         if (imageTransform == null)
             imageTransform = transform.Find("Image");
         if (boxCollider2D == null)
@@ -82,13 +80,14 @@ public class ItemDrop : CommonPoolObject
         }
     }
 
-    bool IsPlayerInArea()
+    bool IsPlayerInArea(out Transform playerTransform)
     {
        Collider2D hit = Physics2D.OverlapCircle(
             boxCollider2D.bounds.center,
             rangeRadiusToTake,
             playerLayerMask
         );
+        playerTransform = hit?.transform;
         return hit != null;
     }
 
@@ -96,7 +95,7 @@ public class ItemDrop : CommonPoolObject
     {
        if (boxCollider2D != null)
         {
-            if (IsPlayerInArea())
+            if (IsPlayerInArea(out playerTransform))
                 Gizmos.color = Color.green;
             else
                 Gizmos.color = Color.red;

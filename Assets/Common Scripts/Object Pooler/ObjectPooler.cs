@@ -1,28 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Common2D;
 using UnityEngine;
 
 public class ContainPools
 {
     public Component prefab;
+    public Transform holder;
     public Queue<Component> objectDisable;
 }
-public static class ObjectPooler
+public class ObjectPooler : Singleton<ObjectPooler>
 {
-    private static Dictionary<string, List<Component>> objectEnable = new Dictionary<string, List<Component>>();
-    private static Dictionary<string, ContainPools> objectDisable = new Dictionary<string, ContainPools>();
+    private Dictionary<string, List<Component>> objectEnable = new Dictionary<string, List<Component>>();
+    private Dictionary<string, ContainPools> objectDisable = new Dictionary<string, ContainPools>();
 
-    public static bool IsObjectPoolerExist(string key)
+    public bool IsObjectPoolerExist(string key)
     {
         return objectEnable.ContainsKey(key) && objectDisable.ContainsKey(key);
     }
 
-    public static void InitObjectPooler<T>(string key, int size, T prefab, Action<T> onCreateObj) where T : Component, IPoolObject
+    public void InitObjectPooler<T>(string key, int size, T prefab, Action<T> onCreateObj = null) where T : Component, IPoolObject
     {
+        Transform holder;
         if (!objectDisable.ContainsKey(key))
         {
-            objectDisable.Add(key, new ContainPools { prefab = prefab, objectDisable = new Queue<Component>() });
+            holder = new GameObject($"ObjectPool_{key}").transform;
+            holder.SetParent(this.transform);
+
+            objectDisable.Add(key, new ContainPools { prefab = prefab, holder = holder, objectDisable = new Queue<Component>() });
             objectEnable.Add(key, new List<Component>());
         }
         else
@@ -33,16 +39,17 @@ public static class ObjectPooler
 
         for (int i = 0; i < size; i++)
         {
-            T newPrefab = MonoBehaviour.Instantiate(prefab);
+            T newPrefab = Instantiate(prefab);
             newPrefab.gameObject.SetActive(false);
             if (newPrefab.OnSetInactive == null)
                 newPrefab.OnSetInactive = OnObjectReturn;
             objectDisable[key].objectDisable.Enqueue(newPrefab);
+            newPrefab.transform.SetParent(holder);
             onCreateObj?.Invoke(newPrefab);
         }
     }
 
-    public static T GetObject<T>(string key, bool isActiveNow = true) where T : Component, IPoolObject
+    public T GetObject<T>(string key, bool isActiveNow = true) where T : Component, IPoolObject
     {
         if (!objectEnable.ContainsKey(key) || !objectDisable.ContainsKey(key)) return default(T);
 
@@ -50,10 +57,10 @@ public static class ObjectPooler
         if (objectDisable[key].objectDisable.Count == 0)
         {
             T objEnableFirst = objectDisable[key].prefab as T;
-            newPrefab = MonoBehaviour.Instantiate(objEnableFirst);
+            newPrefab = Instantiate(objEnableFirst);
             if (newPrefab.OnSetInactive == null)
-                newPrefab.OnSetInactive = OnObjectReturn;       
-            Transform transformParent = objectEnable[key].FirstOrDefault()?.transform.parent;
+                newPrefab.OnSetInactive = OnObjectReturn;
+            Transform transformParent = objectDisable[key].holder;
             if (transformParent != null)
                 newPrefab.transform.SetParent(transformParent);
         }
@@ -69,7 +76,7 @@ public static class ObjectPooler
         return newPrefab;
     }
 
-    private static void OnObjectReturn(object obj, string key)
+    private void OnObjectReturn(object obj, string key)
     {
         string _key = key;
         if (!objectEnable.ContainsKey(_key) || !objectDisable.ContainsKey(_key)) return;

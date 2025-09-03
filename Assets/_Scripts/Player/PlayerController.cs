@@ -1,29 +1,31 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using Common2D;
+using Common2D.CreateGameObject2D;
 using Common2D.Inventory;
+using Common2D.Singleton;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public class PlayerController : MonoBehaviour
+[RequireComponent(typeof(PlayerStat))]
+public class PlayerController : Singleton<PlayerController>
 {
-    [Header("Player Settings")]
-    [SerializeField] float moveSpeed = 5f;
-    [Header("Player Status")]
+    [Header("Player Stat")]
     [SerializeField] bool IsStop = true;
     [Header("Components")]
     [SerializeField] Rigidbody2D rb;
     [SerializeField] Gun gun;
     [SerializeField] Transform gunTransform;
     [SerializeField] Camera mainCamera;
+    [SerializeField] PlayerStat playerStat;
+    [SerializeField] PlayerStat PlayerStat { get => playerStat; }
     void Start()
     {
+        playerStat = GetComponent<PlayerStat>();
         rb = GetComponent<Rigidbody2D>();
         rb.freezeRotation = true;
         gun = GetComponentInChildren<Gun>();
         gunTransform = gun.transform;
-
         mainCamera = Camera.main;
 
         InputManager.Instance.OnMove += OnMove;
@@ -57,12 +59,12 @@ public class PlayerController : MonoBehaviour
             rb.velocity = Vector2.zero;
             return;
         }
-        rb.velocity = moveDirection * moveSpeed;
+        rb.velocity = moveDirection * playerStat.GetStatValue(PlayerStatType.Speed);
     }
 
     void OnAttack()
     {
-        if(gun.isAttacking) return;
+        if (gun.isAttacking) return;
         gun.Attack();
     }
 
@@ -89,5 +91,17 @@ public class PlayerController : MonoBehaviour
         {
             rb.velocity = Vector2.zero;
         }
+    }
+
+    public void IncreaseEXP(Transform transformEnemy)
+    {
+        PlayerStat.SetExperienceValue(1f, (exp)=>
+        {
+            CreateGameObject.CreateTextPopup($"EXP +{exp}", transform.position, Color.green);
+        }, ()=>
+        {
+            CreateGameObject.CreateTextPopup($"Level Up!", transform.position, Color.yellow);
+            NotificationSystem.Instance.ShowNotification("You Leveled Up!", NotificationType.Success);
+        });
     }
 }

@@ -1,11 +1,5 @@
-using System;
-using System.ComponentModel;
-using UnityEngine;
-
 public class EnemyReceiveDamageBehaviour : ReceiveDamageBehaviour
 {
-    Action<Transform> OnDie;
-
     void OnEnable()
     {
         InitializeComponents();
@@ -13,11 +7,17 @@ public class EnemyReceiveDamageBehaviour : ReceiveDamageBehaviour
         if (OnDie == null)
         {
             OnDie += ItemDropSystem.Instance.OnEnemyDie;
+            OnDie += PlayerController.Instance.IncreaseEXP;
         }
     }
     public override void Die()
     {
-        OnDie?.Invoke(this.transform);
         base.Die();
+        if (OnDie != null)
+        {
+            OnDie -= ItemDropSystem.Instance.OnEnemyDie;
+            OnDie -= PlayerController.Instance.IncreaseEXP;
+        }
+
     }
 }

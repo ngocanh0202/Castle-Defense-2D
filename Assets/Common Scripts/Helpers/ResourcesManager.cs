@@ -113,7 +113,7 @@ namespace Common2D
 
         public static GunScriptableObject GetGunScriptableObject(string gunName)
         {
-            GunScriptableObject prefab = Resources.Load<GunScriptableObject>($"Gun Scriptable/{gunName}");
+            GunScriptableObject prefab = Resources.Load<GunScriptableObject>($"Scriptable/Bullets/{gunName}");
             if (prefab != null)
             {
                 return prefab;
@@ -165,6 +165,89 @@ namespace Common2D
                 return null;
             }
         }
+        public static TowerDefenseBehaviour GetEnemyTowerPrefab()
+        {
+            TowerDefenseBehaviour prefab = Resources.Load<TowerDefenseBehaviour>("Prefabs/Towers/EnemyTower");
+            if (prefab != null)
+            {
+                return prefab;
+            }
+            else
+            {
+                Debug.LogError("Prefab Tower not found in Resources folder.");
+                return null;
+            }
+        }
+        public static TowerDefenseBehaviour GetPlayerTowerPrefab()
+        {
+            TowerDefenseBehaviour prefab = Resources.Load<TowerDefenseBehaviour>("Prefabs/Towers/PlayerTower");
+            if (prefab != null)
+            {
+                return prefab;
+            }
+            else
+            {
+                Debug.LogError("Prefab Tower not found in Resources folder.");
+                return null;
+            }
+        }
+
+        public static EnemyStatScriptable GetEnemyStatScriptable()
+        {
+            EnemyStatScriptable scriptable = Resources.Load<EnemyStatScriptable>("Scriptable/Stats/EnemyStat");
+            if (scriptable != null)
+            {
+                return scriptable;
+            }
+            else
+            {
+                Debug.LogError("EnemyStatScriptable not found in Resources folder.");
+                return null;
+            }
+        }
+
+        public static ObjectStatScriptable GetObjectStatScriptable()
+        {
+            ObjectStatScriptable scriptable = Resources.Load<ObjectStatScriptable>("Scriptable/Stats/ObjectStat");
+            if (scriptable != null)
+            {
+                return scriptable;
+            }
+            else
+            {
+                Debug.LogError("ObjectStatScriptable not found in Resources folder.");
+                return null;
+            }
+        }
+
+        public static PlayerStatScriptable GetPlayerStatScriptable()
+        {
+            PlayerStatScriptable scriptable = Resources.Load<PlayerStatScriptable>("Scriptable/Stats/PlayerStat");
+            if (scriptable != null)
+            {
+                return scriptable;
+            }
+            else
+            {
+                Debug.LogError("PlayerStatScriptable not found in Resources folder.");
+                return null;
+            }
+        }
+
+        public static TowerStatScriptable GetTowerStatScriptable(string towerName)
+        {
+            TowerStatScriptable scriptable = Resources.Load<TowerStatScriptable>($"Scriptable/Stats/{towerName}");
+            if (scriptable != null)
+            {
+                return scriptable;
+            }
+            else
+            {
+                Debug.LogError("TowerStatScriptable not found in Resources folder.");
+                return null;
+            }
+        }
+
     }
 }
 

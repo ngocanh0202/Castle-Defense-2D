@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class EnemyAttackState : EnemyBaseState
 {
-    float rangeToAttack;
     Gun enemyGun;
     Transform enemyTransform;
     Transform gunTransform;
@@ -21,13 +20,12 @@ public class EnemyAttackState : EnemyBaseState
     (
         EnemyStateMachine stateMachine,
         Animator animator,
-        float rangeToAttack,
+        EnemyStat enemyStat,
         Gun enemyGun
-    ) : base(stateMachine, animator)
+    ) : base(stateMachine, animator, enemyStat)
     {
         enemyTransform = stateMachine.transform;
         gunTransform = enemyGun.transform;
-        this.rangeToAttack = rangeToAttack;
         this.enemyGun = enemyGun;
     }
 
@@ -52,31 +50,34 @@ public class EnemyAttackState : EnemyBaseState
 
     public override void UpdateState()
     {
-        if (target == null || target.gameObject.activeSelf == false)
+        try
         {
-            StateMachine.SwitchState(StateMachine.IdleState);
+            
+            Vector2 direction = (target.position - enemyTransform.position).normalized;
+            gunTransform.right = direction;
+
+            float distanceToTarget = Vector2.Distance(enemyTransform.position, target.position);
+
+            HandleAttacking(distanceToTarget);
+
+            if (Time.time - lastStateCheckTime >= stateCheckDelay)
+            {
+                CheckStateTransitions(distanceToTarget);
+                lastStateCheckTime = Time.time;
+            }
+
+            UpdateConfirmationTimers();
+        }catch
+        {
+            StateMachine.SwitchState(StateMachine.MainMissionState);
             return;
         }
 
-        Vector2 direction = (target.position - enemyTransform.position).normalized;
-        gunTransform.right = direction;
-
-        float distanceToTarget = Vector2.Distance(enemyTransform.position, target.position);
-
-        HandleAttacking(distanceToTarget);
-
-        if (Time.time - lastStateCheckTime >= stateCheckDelay)
-        {
-            CheckStateTransitions(distanceToTarget);
-            lastStateCheckTime = Time.time;
-        }
-
-        UpdateConfirmationTimers();
     }
 
     private void HandleAttacking(float distanceToTarget)
     {
-        bool canAttack = distanceToTarget <= rangeToAttack &&
+        bool canAttack = distanceToTarget <= EnemyStat.GetStatValue(EnemyStatType.RangeToAttack) &&
                         !enemyGun.isAttacking;
 
         if (canAttack)
@@ -87,7 +88,7 @@ public class EnemyAttackState : EnemyBaseState
 
     private void CheckStateTransitions(float distanceToTarget)
     {
-        if (distanceToTarget > rangeToAttack)
+        if (distanceToTarget > EnemyStat.GetStatValue(EnemyStatType.RangeToAttack))
         {
             if (!isConfirmingExit)
             {
@@ -124,13 +125,13 @@ public class EnemyAttackState : EnemyBaseState
     {
         if (target == null)
         {
-            StateMachine.SwitchState(StateMachine.IdleState);
+            StateMachine.SwitchState(StateMachine.MainMissionState);
             return;
         }
 
         float distanceToTarget = Vector2.Distance(enemyTransform.position, target.position);
-        
-        if (distanceToTarget <= StateMachine.ChaseState.rangeToChase)
+
+        if (distanceToTarget <= EnemyStat.GetStatValue(EnemyStatType.RangeToChase))
         {
             StateMachine.SwitchState(StateMachine.ChaseState);
             EnemyChaseState chaseState = StateMachine.CurrentState as EnemyChaseState;
@@ -145,12 +146,12 @@ public class EnemyAttackState : EnemyBaseState
         if (enemyTransform == null) return;
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(enemyTransform.position, rangeToAttack);
-        
+        Gizmos.DrawWireSphere(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToAttack));
+
         if (isConfirmingExit)
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(enemyTransform.position, rangeToAttack);
+            Gizmos.DrawWireSphere(enemyTransform.position, EnemyStat.GetStatValue(EnemyStatType.RangeToAttack));
         }
         
         if (isConfirmingExit && currentExitTimer > 0)

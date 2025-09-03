@@ -1,35 +1,69 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
-public class TowerDefenseBehaviour : MonoBehaviour
+public class Tower
 {
-    [SerializeField] private float rangeToAttack = 4f;
-    [SerializeField] bool canAttack;
-    [SerializeField] Gun gun;
+    public TowerDefenseBehaviour prefab;
+    public TowerStat Stat;
+
+    public Tower(TowerDefenseBehaviour prefab)
+    {
+        this.prefab = prefab;
+    }
+
+    public void SetStat(TowerStat Stat)
+    {
+        this.Stat = Stat;
+    }
+}
+
+[RequireComponent(typeof(TowerStat))]
+public class TowerDefenseBehaviour : CommonPoolObject
+{
+    public Action<TowerDefenseBehaviour> onTowerDisable;
+    public Action<TowerDefenseBehaviour> onTowerEnable;
+    [Header("Tower Components")]
+    [SerializeField] TowerStat towerStat;
     [SerializeField] Transform gunTransform;
     [SerializeField] Transform target;
-    [SerializeField] KeyGuns keyGunType = KeyGuns.None;
+    [SerializeField] Gun gun;
+    [Header("Tower Settings")]
+    [SerializeField] public bool isStopAttack;
+    [SerializeField] public KeyGuns keyGunType = KeyGuns.None;
+    [Header("Attack Settings")]
+    [SerializeField] bool isConfirmingAttack;
+    [Header("State Check Settings")]
+    [SerializeField] float checkDelay = 0.33f; 
+    [SerializeField] float lastCheckTime;
 
     void Start()
     {
-        canAttack = false;
-        gun = GetComponentInChildren<Gun>();
-        gunTransform = gun.transform;
+        if (gun == null)
+        {
+            gun = GetComponentInChildren<Gun>();
+            gunTransform = gun.transform;
+            if (keyGunType == KeyGuns.None)
+                Debug.LogWarning($"TowerDefenseBehaviour {gameObject.name}: KeyGunType is None, please set a valid KeyGunType.");
+            else
+                gun?.SetStrategy(keyGunType);
+        }
+
+        if (towerStat == null)
+            towerStat = GetComponent<TowerStat>();
+
         target = null;
-        if (keyGunType == KeyGuns.None)
-        {
-            Debug.LogWarning($"TowerDefenseBehaviour {gameObject.name}: KeyGunType is None, please set a valid KeyGunType.");
-        }
-        else
-        {
-            gun.SetStrategy(keyGunType);
-        }
+        isStopAttack = false;
+        lastCheckTime = 0f;
     }
 
     void Update()
     {
-        CheckTargetInRange();
+        if(isStopAttack) return;
+        if (Time.time - lastCheckTime >= checkDelay)
+        {
+            CheckTargetInRange();
+            lastCheckTime = Time.time;
+        }
         HandleAttack();
     }
 
@@ -38,28 +72,29 @@ public class TowerDefenseBehaviour : MonoBehaviour
         if (IsEnemyInRange(out Collider2D enemyCollider))
         {
             target = enemyCollider.transform;
-            canAttack = true;
+            isConfirmingAttack = true;
         }
         else
         {
             target = null;
-            canAttack = false;
+            isConfirmingAttack = false;
         }
     }
 
     void HandleAttack()
     {
-        if (canAttack && target != null)
+        if (isConfirmingAttack && target != null)
         {
             Vector2 direction = (target.position - transform.position).normalized;
             gunTransform.right = direction;
             gun.Attack(false);
         }
+
     }
 
     bool IsEnemyInRange(out Collider2D enemyCollider)
     {
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, rangeToAttack);
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, towerStat.GetStatValue<float>(TowerStatType.Range));
         foreach (var collider in hitColliders)
         {
             IReceiveDamage enemyReceiveDamage = collider.GetComponent<IReceiveDamage>();
@@ -75,14 +110,28 @@ public class TowerDefenseBehaviour : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (IsEnemyInRange(out Collider2D enemyCollider))
-        {
+        if (isStopAttack) return;
+        if (isConfirmingAttack)
             Gizmos.color = Color.red;
-        }
         else
-        {
             Gizmos.color = Color.green;
+        
+        Gizmos.DrawWireSphere(transform.position, towerStat.GetStatValue<float>(TowerStatType.Range));
+        if(target != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, target.position);
         }
-        Gizmos.DrawWireSphere(transform.position, rangeToAttack);
+    }
+
+    void OnEnable()
+    {
+        onTowerEnable?.Invoke(this);
+    }
+
+    protected override void OnDisable()
+    {
+        onTowerDisable?.Invoke(this);
+        base.OnDisable();
     }
 }

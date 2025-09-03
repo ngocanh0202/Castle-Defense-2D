@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Common2D;
 using Common2D.CreateGameObject2D;
 using Common2D.EventMouse2D;
+using Common2D.Singleton;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -29,11 +30,24 @@ public class InputManager : Singleton<InputManager>
     public event Action OnReloadAmmo;
     public event Action OnOpenInventory;
     public List<InputType> inputTypes;
-    void Start()
+    protected override void Awake()
     {
         inputTypes = new List<InputType>((InputType[])Enum.GetValues(typeof(InputType)));
         canInput = true;
     }
+    void Start()
+    {
+        GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;
+    }
+
+    private void HandleGameStateChanged(GameManagerState newState)
+    {
+        if (newState == GameManagerState.GameOver)
+        {
+            DisableAllInput();
+        }
+    }
+
     void Update()
     {
         if (!canInput)
@@ -96,6 +110,10 @@ public class InputManager : Singleton<InputManager>
         {
             CreateGameObject.CreateTextPopup("Hello World", EventMouse2D.GetPositionOnMouse2D(), Color.white, null);
         }
+    }
+    public void DisableAllInput()
+    {
+        inputTypes.Clear();
     }
     public void DisableInput(params InputType[] inputDisableTypes)
     {

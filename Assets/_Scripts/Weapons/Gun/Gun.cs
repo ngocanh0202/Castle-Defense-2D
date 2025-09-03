@@ -1,19 +1,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Common2D;
-using Common2D.CreateGameObject2D;
 using Common2D.Singleton;
 using UnityEngine;
 
-public class Gun : Weapon
+public class Gun : MonoBehaviour
 {
-    [SerializeField] Transform bulletHolder;
-    [SerializeField] bool canShoot = true;
-    [SerializeField] float countDown = 0.5f;
-    [SerializeField] int maxAmmo;
-    [SerializeField] int numberOfBullets;
-    [SerializeField] float speedReloadAmmo;
+    [Header("Gun Settings")]
+    [SerializeField] public bool canShoot = true;
+    [SerializeField] public bool isAttacking = false;
+    [SerializeField] public float countDown = 0.5f;
+    [SerializeField] public int maxAmmo;
+    [SerializeField] public int numberOfBullets;
+    [SerializeField] public float speedReloadAmmo;
+    [Header("Components")]
+    [SerializeField] private ObjectStat ObjectStatus;
     private CommonBulletStrategy currentBulletStrategy;
     private KeyGuns currentBulletStrategyType;
     private Coroutine attackCoroutine;
@@ -22,24 +23,15 @@ public class Gun : Weapon
     public event Action<CommonBulletStrategy, string> OnSetBulletStrategy;
     public event Action<int, int> OnAmmoChanged;
 
-    protected override void Awake()
+    private void Awake()
     {
         currentBulletStrategyType = KeyGuns.None;
         canShoot = true;
-        InitializeBulletHolder();
+        isAttacking = false;
+        if(ObjectStatus == null)
+            ObjectStatus = GetComponentInParent<ObjectStat>();
+        
         InitializeBulletStrategies();
-    }
-
-    private void InitializeBulletHolder()
-    {
-        if (bulletHolder == null)
-        {
-            bulletHolder = GameObject.Find("=====PoolerHolder=====/Bullet")?.transform;
-            if (bulletHolder == null)
-            {
-                Debug.LogError("Bullet holder not found!");
-            }
-        }
     }
 
     private void InitializeBulletStrategies()
@@ -50,11 +42,6 @@ public class Gun : Weapon
             { KeyGuns.RatlingGunBullet, new RatlingGunStrategy()},
             { KeyGuns.Boom, new BoomStrategy()}
         };
-
-        foreach (var strategy in bulletStrategies.Values)
-        {
-            strategy.Initialize(bulletHolder);
-        }
     }
 
     public void SetStrategy(KeyGuns newStrategyType)
@@ -76,11 +63,11 @@ public class Gun : Weapon
         }
     }
 
-    public override void Attack(bool isPlayer = true)
+    public void Attack(bool isPlayer = true)
     {
-        if (currentBulletStrategy != null && canShoot && numberOfBullets > 0)
+        if (currentBulletStrategy != null && canShoot && numberOfBullets > 0 && gameObject.activeInHierarchy)
         {
-            currentBulletStrategy.Shoot(transform);
+            currentBulletStrategy.Shoot(transform, ObjectStatus.GetStatValue(StatType.Attack));
             if (isPlayer)
             {
                 numberOfBullets--;
@@ -140,6 +127,11 @@ public class Gun : Weapon
         yield return new WaitForSeconds(countDown);
         canShoot = true;
         StopAttack();
+    }
+
+    protected void StopAttack()
+    {
+        isAttacking = false;
     }
 
     void OnEnable()
