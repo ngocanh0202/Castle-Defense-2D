@@ -16,9 +16,12 @@ public class PlayerController : Singleton<PlayerController>
     [SerializeField] Rigidbody2D rb;
     [SerializeField] Gun gun;
     [SerializeField] Transform gunTransform;
-    [SerializeField] Camera mainCamera;
     [SerializeField] PlayerStat playerStat;
     [SerializeField] PlayerStat PlayerStat { get => playerStat; }
+
+    [Header("RTS Mode")]
+    [SerializeField] private bool rtsMode = true;
+
     void Start()
     {
         playerStat = GetComponent<PlayerStat>();
@@ -26,24 +29,18 @@ public class PlayerController : Singleton<PlayerController>
         rb.freezeRotation = true;
         gun = GetComponentInChildren<Gun>();
         gunTransform = gun.transform;
-        mainCamera = Camera.main;
 
-        InputManager.Instance.OnMove += OnMove;
-        InputManager.Instance.OnAttack += OnAttack;
-        InputManager.Instance.OnOpenInventory += OnOpenInventory;
-        InputManager.Instance.OnStop += OnStop;
-        InputManager.Instance.OnSetBulletStrategy += OnSetBulletStrategy;
-        InputManager.Instance.OnReloadAmmo += OnReloadAmmo;
-        InputManager.Instance.OnSetWeaponRotation += OnSetWeaponRotation;
-
-        gun.SetStrategy(KeyGuns.BaseBullet);
-    }
-
-    void Update()
-    {
-        if (mainCamera != null)
+        if (!rtsMode)
         {
-            mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y, mainCamera.transform.position.z);
+            InputManager.Instance.OnMove += OnMove;
+            InputManager.Instance.OnAttack += OnAttack;
+            InputManager.Instance.OnOpenInventory += OnOpenInventory;
+            InputManager.Instance.OnStop += OnStop;
+            InputManager.Instance.OnSetBulletStrategy += OnSetBulletStrategy;
+            InputManager.Instance.OnReloadAmmo += OnReloadAmmo;
+            InputManager.Instance.OnSetWeaponRotation += OnSetWeaponRotation;
+
+            gun.SetStrategy(KeyGuns.BaseBullet);
         }
     }
 

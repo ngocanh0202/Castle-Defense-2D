@@ -1,7 +1,7 @@
 # Castle Defense 2D
 
 ## Overview
-Castle Defense 2D is a tower defense game built with Unity, combining traditional tower defense mechanics with direct character control and base building elements. Players must defend their castle while actively participating in combat and expanding their defensive infrastructure.
+Castle Defense 2D is a strategic top-down tower defense game built with Unity for Android. Instead of directly controlling a single player character, the player acts as a commander overseeing the battlefield. Build towers, spawn units, and defend your base against waves of enemies.
 
 ## Core Features
 
@@ -10,12 +10,13 @@ Castle Defense 2D is a tower defense game built with Unity, combining traditiona
 - **Tower Upgrades**: Improve damage, range, and attack speed of your towers
 - **Resource Management**: Collect gold and resources to build and upgrade defenses
 - **Strategic Positioning**: Plan optimal tower placement for maximum effectiveness
+- **Unit Spawning**: Towers act as barracks, spawning allied soldiers to defend and counter-attack
 
-### 🎮 Character Control
-- **Free Movement**: Control your character freely across the battlefield
-- **Direct Combat**: Engage enemies directly alongside your towers
-- **Special Abilities**: Use powerful skills to support your defense
-- **Real-time Action**: Switch between strategic planning and active combat
+### 🎥 RTS Camera Controls
+- **Drag to Pan**: Single finger drag to move camera across the battlefield
+- **Pinch to Zoom**: Two-finger pinch gesture to zoom in/out
+- **Map Bounds**: Camera stays within map boundaries
+- **No Direct Avatar**: Focus entirely on macro-strategy and base management
 
 ### ⚔️ Weapon System
 - **Diverse Arsenal**: Swords, bows, magic staffs, and ranged weapons
@@ -33,22 +34,24 @@ Castle Defense 2D is a tower defense game built with Unity, combining traditiona
 
 ### System
 - Unity 2022.3 LTS 
+- Android SDK
 - Visual Studio Code
 - Git
 
 ## Gameplay Guide
 
-### Controls
-- **WASD**: Move character
-- **Mouse**: Aim and shoot
-- **1-3**: Switch bullets
-- **Q**: Switch weapon
+### Controls (Touch)
+- **Single Finger Drag**: Move camera (pan)
+- **Two Finger Pinch**: Zoom in/out
+- **Tap Tower**: Select tower to spawn units
+- **Drag Tower to Enemy**: Command tower to prioritize target
 
 ### How to Play
 1. **Preparation Phase**: Build towers and production buildings before enemy waves
-2. **Combat Phase**: Control your character to assist towers in eliminating enemies
-3. **Development**: Use collected resources to upgrade and expand your defenses
-4. **Strategy**: Balance between active combat and strategic tower placement
+2. **Command Phase**: Tap towers and spawn units to defend
+3. **Combat Phase**: Towers auto-attack enemies; drag to set priority targets
+4. **Development**: Use collected resources to upgrade and expand your defenses
+5. **Strategy**: Balance between tower placement and unit spawning
 
 ## Technical Features
 
@@ -59,9 +62,9 @@ Castle Defense 2D is a tower defense game built with Unity, combining traditiona
 - **2D Animation**: Smooth character and enemy animations
 
 ### AI Systems
-- **Pathfinding**: A* algorithm for enemy movement
+- **Pathfinding**: A* algorithm for enemy and allied unit movement
 - **Behavior Trees**: Smart AI for different enemy types
-- **Formation System**: Coordinated enemy group movement
+- **Formation System**: Coordinated enemy group movement in structured formations
 - **Dynamic Difficulty**: Adaptive challenge scaling
 
 ### Optimization
@@ -77,17 +80,17 @@ Castle Defense 2D is a tower defense game built with Unity, combining traditiona
 
 ## Game Mechanics
 
-### Tower Types
-- **Archer Tower**: Long-range, moderate damage
-- **Cannon Tower**: Area damage, slow attack speed
-- **Magic Tower**: Special effects, elemental damage
-- **Barracks**: Spawns soldier units
+### Tower Mechanics
+- **Active Defense**: Towers automatically target and fire at enemies within range
+- **Priority Targeting**: Drag from tower to enemy to prioritize specific targets
+- **Unit Spawning**: Select towers to spawn allied soldiers for defense and counter-attacks
+- **Tower Types**: Archer, Cannon, Magic, and Barracks towers
 
-### Weapon Categories
-- **Melee Weapons**: High damage, close range
-- **Ranged Weapons**: Long distance, precise targeting
-- **Magic Weapons**: Special effects, area damage
-- **Support Tools**: Healing, buffs, and utilities
+### Unit System
+- **Allied Soldiers**: Spawned from towers, use A* pathfinding to hunt enemies
+- **Formation Movement**: Units move in organized grid formations
+- **Autonomous Behavior**: Units operate without direct player control
+- **Enemy AI**: Enemies seek nearest tower, progressing to Main Tower
 
 ### Building Types
 - **Gold Mine**: Generates gold over time
@@ -115,4 +118,5 @@ Castle Defense 2D is a tower defense game built with Unity, combining traditiona
 
 ---
 
+**Target Platform**: Android (Touch Controls)
 **Note**: This game is currently in development. Some features may be incomplete or subject to change in future updates.

@@ -15,13 +15,21 @@ public enum InputType
     SetBulletStrategy,
     ReloadAmmo,
     OpenInventory,
-    OnSetWeaponRotation
+    OnSetWeaponRotation,
+    TowerSelect,
+    TowerDrag
 }
 
 public class InputManager : Singleton<InputManager>
 {
+    [Header("Input Mode")]
+    [SerializeField] private bool rtsMode = true;
     [SerializeField] private bool canInput;
     [SerializeField] private Quaternion weaponRotation;
+
+    [Header("Touch Settings")]
+    [SerializeField] private float dragThreshold = 10f;
+
     public event Action<Vector2> OnMove;
     public event Action<bool> OnStop;
     public event Action OnAttack;
@@ -29,12 +37,33 @@ public class InputManager : Singleton<InputManager>
     public event Action<Action<Transform>> OnSetWeaponRotation;
     public event Action OnReloadAmmo;
     public event Action OnOpenInventory;
+    public event Action<Vector2> OnTowerTap;
+    public event Action<Vector2, Vector2> OnTowerDrag;
+
     public List<InputType> inputTypes;
+
+    private Vector2 touchStartPosition;
+    private bool isDragging;
+    private bool isTowerDragging;
+    private bool isUITouch;
+    private GameObject draggedTower;
+
     protected override void Awake()
     {
+        base.Awake();
         inputTypes = new List<InputType>((InputType[])Enum.GetValues(typeof(InputType)));
         canInput = true;
+
+        if (rtsMode)
+        {
+            inputTypes.Remove(InputType.Move);
+            inputTypes.Remove(InputType.Stop);
+            inputTypes.Remove(InputType.Attack);
+            inputTypes.Remove(InputType.SetBulletStrategy);
+            inputTypes.Remove(InputType.ReloadAmmo);
+        }
     }
+
     void Start()
     {
         GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;
@@ -53,26 +82,34 @@ public class InputManager : Singleton<InputManager>
         if (!canInput)
             return;
 
-        if (IsInputTypeCanBeUsed(InputType.Attack))
+        HandleKeyboardInput();
+        HandleTouchInput();
+    }
+
+    private void HandleKeyboardInput()
+    {
+        if (!rtsMode && IsInputTypeCanBeUsed(InputType.Attack))
         {
-            OnSetWeaponRotation?.Invoke(
-                (TransformObj) => EventMouse2D.LookAtMouse2D(TransformObj, 5f));
+            OnSetWeaponRotation?.Invoke(transformObj => EventMouse2D.LookAtMouse2D(transformObj, 5f));
         }
 
-        float moveX = Input.GetAxis("Horizontal");
-        float moveY = Input.GetAxis("Vertical");
-        if ((moveX != 0 || moveY != 0) && IsInputTypeCanBeUsed(InputType.Move))
+        if (!rtsMode && IsInputTypeCanBeUsed(InputType.Move))
         {
-            OnStop?.Invoke(false);
-            Vector2 moveDirection = new Vector2(moveX, moveY).normalized;
-            OnMove?.Invoke(moveDirection);
-        }
-        else
-        {
-            OnStop?.Invoke(true);
+            float moveX = Input.GetAxis("Horizontal");
+            float moveY = Input.GetAxis("Vertical");
+            if ((moveX != 0 || moveY != 0))
+            {
+                OnStop?.Invoke(false);
+                Vector2 moveDirection = new Vector2(moveX, moveY).normalized;
+                OnMove?.Invoke(moveDirection);
+            }
+            else
+            {
+                OnStop?.Invoke(true);
+            }
         }
 
-        if (Input.GetMouseButtonDown(0) && IsInputTypeCanBeUsed(InputType.Attack))
+        if (!rtsMode && Input.GetMouseButtonDown(0) && IsInputTypeCanBeUsed(InputType.Attack))
         {
             if (EventSystem.current.IsPointerOverGameObject())
                 return;
@@ -80,13 +117,12 @@ public class InputManager : Singleton<InputManager>
             OnAttack?.Invoke();
         }
 
-        if (Input.GetKeyDown(KeyCode.I) && IsInputTypeCanBeUsed(InputType.OpenInventory))
+        if (!rtsMode && Input.GetKeyDown(KeyCode.I) && IsInputTypeCanBeUsed(InputType.OpenInventory))
         {
             OnOpenInventory?.Invoke();
         }
 
-
-        if( IsInputTypeCanBeUsed(InputType.Attack))
+        if (!rtsMode && IsInputTypeCanBeUsed(InputType.Attack))
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 OnSetBulletStrategy?.Invoke(KeyGuns.BaseBullet);
@@ -100,21 +136,93 @@ public class InputManager : Singleton<InputManager>
                 OnSetBulletStrategy?.Invoke(KeyGuns.Boom);
             }
 
-        if (Input.GetKeyDown(KeyCode.R) && IsInputTypeCanBeUsed(InputType.ReloadAmmo))
+        if (!rtsMode && Input.GetKeyDown(KeyCode.R) && IsInputTypeCanBeUsed(InputType.ReloadAmmo))
         {
             OnReloadAmmo?.Invoke();
         }
+    }
 
-
-        if (Input.GetKeyDown(KeyCode.V) && IsInputTypeCanBeUsed(InputType.Attack))
+    private void HandleTouchInput()
+    {
+        if (Input.touchCount > 0)
         {
-            CreateGameObject.CreateTextPopup("Hello World", EventMouse2D.GetPositionOnMouse2D(), Color.white, null);
+            if (Input.touchCount == 1)
+            {
+                Touch touch = Input.GetTouch(0);
+
+                switch (touch.phase)
+                {
+                    case TouchPhase.Began:
+                        touchStartPosition = touch.position;
+                        isDragging = false;
+                        isTowerDragging = false;
+                        isUITouch = false;
+
+                        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                        {
+                            isUITouch = true;
+                            return;
+                        }
+
+                        if (IsInputTypeCanBeUsed(InputType.TowerSelect))
+                        {
+                            Vector2 worldPosition = GetWorldPosition(touch.position);
+                            RaycastHit2D hit = Physics2D.Raycast(worldPosition, Vector2.zero);
+                            if (hit.collider != null && hit.collider.CompareTag("Tower"))
+                            {
+                                draggedTower = hit.collider.gameObject;
+                            }
+                        }
+                        break;
+
+                    case TouchPhase.Moved:
+                        float dragDistance = Vector2.Distance(touch.position, touchStartPosition);
+                        if (dragDistance > dragThreshold)
+                        {
+                            isDragging = true;
+
+                            if (draggedTower != null && IsInputTypeCanBeUsed(InputType.TowerDrag))
+                            {
+                                isTowerDragging = true;
+                                Vector2 worldStart = GetWorldPosition(touchStartPosition);
+                                Vector2 worldCurrent = GetWorldPosition(touch.position);
+                                OnTowerDrag?.Invoke(worldStart, worldCurrent);
+                            }
+                        }
+                        break;
+
+                    case TouchPhase.Ended:
+                        if (!isUITouch && !isDragging && !isTowerDragging && IsInputTypeCanBeUsed(InputType.TowerSelect))
+                        {
+                            Vector2 worldPosition = GetWorldPosition(touch.position);
+                            OnTowerTap?.Invoke(worldPosition);
+                        }
+
+                        isDragging = false;
+                        isTowerDragging = false;
+                        isUITouch = false;
+                        draggedTower = null;
+                        break;
+                }
+            }
         }
     }
+
+    private Vector2 GetWorldPosition(Vector2 screenPosition)
+    {
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            return cam.ScreenToWorldPoint(screenPosition);
+        }
+        return screenPosition;
+    }
+
     public void DisableAllInput()
     {
         inputTypes.Clear();
     }
+
     public void DisableInput(params InputType[] inputDisableTypes)
     {
         foreach (var inputTypeDisable in inputDisableTypes)
@@ -134,8 +242,30 @@ public class InputManager : Singleton<InputManager>
             this.inputTypes = new List<InputType>(inputTypes);
         }
     }
+
     private bool IsInputTypeCanBeUsed(InputType inputType)
     {
         return inputTypes.Contains(inputType);
+    }
+
+    public void SetRTSMode(bool enabled)
+    {
+        rtsMode = enabled;
+        if (rtsMode)
+        {
+            inputTypes.Remove(InputType.Move);
+            inputTypes.Remove(InputType.Stop);
+            inputTypes.Remove(InputType.Attack);
+            inputTypes.Remove(InputType.SetBulletStrategy);
+            inputTypes.Remove(InputType.ReloadAmmo);
+        }
+        else
+        {
+            inputTypes.Add(InputType.Move);
+            inputTypes.Add(InputType.Stop);
+            inputTypes.Add(InputType.Attack);
+            inputTypes.Add(InputType.SetBulletStrategy);
+            inputTypes.Add(InputType.ReloadAmmo);
+        }
     }
 }
