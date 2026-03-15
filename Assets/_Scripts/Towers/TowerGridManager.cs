@@ -17,8 +17,10 @@ public class TowerGridManager : Singleton<TowerGridManager>
     [SerializeField] private Material gridLineMaterial;
 
     private GridCustom<TowerTile> gridCustom;
-    [SerializeField] Action<bool> onSetBuildingMode;
+    [SerializeField] public Action<bool> onSetBuildingMode;
     [SerializeField] public Action onSetTowerEnemy;
+
+    public bool IsBuildingMode => isBuildingMode;
 
     protected override void Awake()
     {
@@ -209,4 +211,10 @@ public class TowerGridManager : Singleton<TowerGridManager>
     }
 
     private void DrawLineGrid(Vector3 start, Vector3 end) => Gizmos.DrawLine(start, end);
+
+    public void SetBuildMode(bool enabled)
+    {
+        isBuildingMode = enabled;
+        onSetBuildingMode?.Invoke(isBuildingMode);
+    }
 }

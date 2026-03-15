@@ -6,5 +6,6 @@ public enum GameManagerState
     Pause,
     Resume,
     End,
-    GameOver
+    GameOver,
+    Victory
 }

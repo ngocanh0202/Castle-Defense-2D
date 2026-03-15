@@ -19,9 +19,7 @@ public class Testing : MonoBehaviour
         gun.OnAmmoChanged += OnAmountChanged;
         textMeshProWeapon.text = KeyGuns.BaseBullet.ToString();
         textMeshProBullet.text = "10/10";
-
-        InputManager.Instance.OnSetWeaponRotation += OnSetWeaponRotation;
-
+        
         PopupText popupText = ResourcesManager.GetPopupTextPrefab().GetComponent<PopupText>();
         ObjectPooler.Instance.InitObjectPooler<PopupText>(
             KeyOfObjPooler.PopupText.ToString(),

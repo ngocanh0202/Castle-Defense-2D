@@ -72,12 +72,12 @@ public class ItemDrop : CommonPoolObject
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        PlayerController playerController = collision.GetComponent<PlayerController>();
-        if (playerController != null)
-        {
-            InventoryManager.Instance.AddItem(item, quantity);
-            gameObject.SetActive(false);
-        }
+        // PlayerController playerController = collision.GetComponent<PlayerController>();
+        // if (playerController != null)
+        // {
+        //     InventoryManager.Instance.AddItem(item, quantity);
+        //     gameObject.SetActive(false);
+        // }
     }
 
     bool IsPlayerInArea(out Transform playerTransform)

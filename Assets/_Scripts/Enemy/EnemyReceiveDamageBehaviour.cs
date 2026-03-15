@@ -7,7 +7,6 @@ public class EnemyReceiveDamageBehaviour : ReceiveDamageBehaviour
         if (OnDie == null)
         {
             OnDie += ItemDropSystem.Instance.OnEnemyDie;
-            OnDie += PlayerController.Instance.IncreaseEXP;
         }
     }
     public override void Die()
@@ -16,8 +15,6 @@ public class EnemyReceiveDamageBehaviour : ReceiveDamageBehaviour
         if (OnDie != null)
         {
             OnDie -= ItemDropSystem.Instance.OnEnemyDie;
-            OnDie -= PlayerController.Instance.IncreaseEXP;
         }
-
     }
 }

@@ -1,8 +1,8 @@
 using Common2D.Singleton;
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerStat))]
-public class PlayerReceiveDamageBehaviour : ReceiveDamageBehaviour
+[RequireComponent(typeof(TowerStat))]
+public class MainTowerBehaviour : ReceiveDamageBehaviour
 {
     public override void Die()
     {
